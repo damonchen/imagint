@@ -24,7 +24,18 @@ class ChatMessage(db.Model):
     id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
     chat_id = Column(String(64), nullable=False)
     account_id = Column(Integer, nullable=False)
-    image_path_ids = Column(Text)  # image path，储存的是attachment中的file_id的列表？
-    translated_image_path_ids = Column(Text)  # 也是ids
-    translated_text = Column(Text)  # 用file_id+翻译内容作为message的信息
+    type = Column(String(32), default="text")  # text, image, etc.
+    prompt = Column(Text)  # image path，储存的是attachment中的file_id的列表？
+    params = Column(Text)  # 其他参数
+    image_path = Column(Text, nullable=True)  # 如果是图片消息，存储图片路径
     created_at = Column(DateTime, default=datetime.now)
+
+
+class ChatMessageImages(db.Model):
+    __tablename__ = "chat_message_images"
+
+    id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
+    chat_message_id = Column(String(64), ForeignKey("chat_messages.id"), nullable=False)
+    image_path = Column(Text, nullable=False)
+
+    chat_message = relationship("ChatMessage", back_populates="images")

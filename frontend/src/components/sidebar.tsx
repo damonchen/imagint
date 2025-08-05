@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
-import { IconChevronsLeft, IconMenu2, IconX } from '@tabler/icons-react'
+import { IconChevronsLeft, IconMenu2, IconReceipt, IconSettings, IconX } from '@tabler/icons-react'
 import { Layout, LayoutHeader } from './custom/layout'
 import { Button } from './custom/button'
 import Nav from './nav'
 import { cn } from '@/lib/utils'
 import { sidelinks } from '@/data/sidelinks'
+import { useSelf } from '@/provider/self-account-provider'
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { useNavigate } from 'react-router-dom'
 
 interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
   isCollapsed: boolean
@@ -17,6 +21,9 @@ export default function Sidebar2({
   setIsCollapsed,
 }: SidebarProps) {
   const [navOpened, setNavOpened] = useState(false)
+  const { account } = useSelf();
+
+  const navigate = useNavigate();
 
   /* Make body not scrollable when navBar is opened */
   useEffect(() => {
@@ -30,7 +37,7 @@ export default function Sidebar2({
   return (
     <aside
       className={cn(
-        `fixed left-0 right-0 top-0 z-50 w-full border-r-2 border-r-muted transition-[width] md:bottom-0 md:right-auto md:h-svh ${isCollapsed ? 'md:w-14' : 'md:w-40'}`,
+        `fixed left-0 right-0 top-0 z-50 w-full border-r-2 border-r-muted transition-[width] md:bottom-0 md:right-auto md:h-svh ${isCollapsed ? 'md:w-14' : 'md:w-48'}`,
         className
       )}
     >
@@ -98,7 +105,7 @@ export default function Sidebar2({
 
         {/* Navigation links */}
 
-        <div className='flex flex-col justify-between'>
+        <div className='flex flex-col justify-between h-full'>
           <Nav
             id='sidebar-menu'
             className={`h-full flex-1 overflow-auto ${navOpened ? 'max-h-screen' : 'max-h-0 py-0 md:max-h-screen md:py-2'}`}
@@ -107,8 +114,35 @@ export default function Sidebar2({
             links={sidelinks}
           />
 
-          <div>
-            settings
+          <div className='p-2'>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-12 w-full justify-start gap-2 px-2">
+                  <Avatar className="h-8 w-8">
+                    {account?.avatar ? (
+                      <AvatarImage src={account.avatar} alt={account.name} />
+                    ) : (
+                      <AvatarFallback>
+                        {account?.name?.charAt(0) || "U"}
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <span className={`truncate text-sm ${isCollapsed ? 'hidden' : 'block'}`}>
+                    {account?.name || "User"}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="start" side="right">
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <IconSettings className="mr-2 h-4 w-4" />
+                  <span>用户设置</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate('/billing')}>
+                  <IconReceipt className="mr-2 h-4 w-4" />
+                  <span>账单查看</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

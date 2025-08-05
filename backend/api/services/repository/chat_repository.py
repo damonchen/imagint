@@ -52,10 +52,15 @@ class ChatRepository(object):
             return True
         return False
 
+
+class ChatMessageRepository(object):
+
     @staticmethod
-    def create_message(account: Account, chat_id: str, image_path: str) -> ChatMessage:
+    def create_message(
+        account: Account, chat_id: str, prompt: str, params: dict
+    ) -> ChatMessage:
         message = ChatMessage(
-            account_id=account.id, chat_id=chat_id, image_path=image_path
+            account_id=account.id, chat_id=chat_id, prompt=prompt, params=params
         )
         db.session.add(message)
         db.session.flush()

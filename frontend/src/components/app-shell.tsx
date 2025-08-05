@@ -22,13 +22,14 @@ function MainContent({ isCollapsed }: { isCollapsed: boolean }) {
 export default function AppShell() {
   const [isCollapsed, setIsCollapsed] = useIsCollapsed()
   const { token } = useAuth();
+  const isDebug = process.env.NODE_ENV === 'development';
 
   return (
-    token ? <SelfAccountProvider>
+    token || isDebug ? <SelfAccountProvider>
       <div className='relative h-full overflow-hidden bg-background'>
         <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         <MainContent isCollapsed={isCollapsed} />
       </div>
-    </SelfAccountProvider > : <></>
+    </SelfAccountProvider > : <>xxxxxxxxxxxx</>
   )
 }
