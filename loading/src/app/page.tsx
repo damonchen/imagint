@@ -561,11 +561,12 @@ function HomeContent() {
         <SignInModal
           onClose={() => setShowSignInModal(false)}
           onLoginSuccess={() => {
+            window.location.href = '/dashboard';
             setIsLoggedIn(true);
             // 如果用户之前点击了升级按钮，现在可以继续升级流程
             if (upgradingPlan) {
               setTimeout(() => {
-                window.location.href = '/dashboard';
+                window.location.href = '/m/';
               }, 2000);
             }
           }}
@@ -702,6 +703,8 @@ function SignInModal({ onClose, onLoginSuccess }: { onClose: () => void; onLogin
 
       console.log('Login successful:', response.data);
       // Handle successful login (e.g., store token, redirect, etc.)
+      localStorage.setItem('access_token', response.data.access_token);
+
       onClose();
       if (onLoginSuccess) {
         onLoginSuccess();

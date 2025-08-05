@@ -1,0 +1,54 @@
+# version: '3.8'
+services:
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - "6379:6379"
+    container_name: imgint-redis
+    restart: always
+    command: redis-server --save 20 1 --loglevel warning --requirepass eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+    networks:
+      - imgint-net
+    volumes: 
+      - './data/cache:/data'
+
+  rabbit:
+    image: rabbitmq:3.10-management
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    container_name: imgint-rabbitmq
+    restart: always
+    environment:
+      RABBITMQ_DEFAULT_VHOST: imgint
+      RABBITMQ_DEFAULT_USER: imgint
+      RABBITMQ_DEFAULT_PASS: password
+    networks:
+      - imgint-net
+
+  postgresql:
+    image: postgres
+    volumes:
+      - './data/postgresql_data:/var/lib/postgresql/data'
+    ports:
+      - "5434:5432"
+    environment:
+      # - ALLOW_EMPTY_PASSWORD=no
+      - POSTGRES_DB=imgint
+      - POSTGRES_USER=imgint
+      - POSTGRES_PASSWORD=c41ffdedf996e561181b055e242f6759
+      - POSTGRESQL_DATABASE=imgint
+      # - POSTGRESQL_PORT=5433
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    networks:
+      - imgint-net
+
+networks:
+  imgint-net:
+    driver: bridge
+
+volumes:
+  postgresql_data:
+    driver: local
+  cache:
+    driver: local

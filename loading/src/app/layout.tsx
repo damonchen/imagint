@@ -9,10 +9,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Raphael AI - AI Image Generator",
-  description: "Create stunning AI-generated images in seconds with Raphael AI, the world's first unlimited free AI image generator.",
+  title: "ImagInt AI - AI Image Generator",
+  description: "Create stunning AI-generated images in seconds with ImagInt AI, the world's first unlimited free AI image generator.",
   icons: {
-    icon: "/raphael-logo.svg",
+    icon: "/ImagInt-logo.svg",
   },
 };
 

@@ -8,6 +8,14 @@ const nextConfig: NextConfig = {
     });
     return config;
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://192.168.187.144:5080/api/:path*' // Proxy to Backend
+      }
+    ]
+  }
 };
 
 export default nextConfig;
