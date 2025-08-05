@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { CopyIcon } from '@radix-ui/react-icons'
+import { IconChevronDown } from '@tabler/icons-react'
 import { Button } from '@/components/custom/button'
 import {
   Card,
@@ -25,14 +26,23 @@ import { Input } from "@/components/ui/input"
 import ThemeSwitch from '@/components/theme-switch'
 import { TopNav } from '@/components/top-nav'
 import { UserNav } from '@/components/user-nav'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { Layout, LayoutBody, LayoutHeader } from '@/components/custom/layout'
 import { RecentSales } from './components/recent-sales'
 import { Overview } from './components/overview'
 import { useSelf } from '@/provider/self-account-provider';
+import { Textarea } from '@/components/ui/textarea'
+import { useChatStore } from '@/store'
 
 
 export default function Dashboard() {
   const { account } = useSelf();
+  const { chat } = useChatStore();
+  const [prompt, setPrompt] = useState('');
+
+  const onImageGenerate = () => {
+    // 调用后台的api生成图片，然后图片以框架的方式显示
+  }
 
   return (
     <Layout>
@@ -48,7 +58,201 @@ export default function Dashboard() {
 
       {/* ===== Main ===== */}
       <LayoutBody className='space-y-4'>
-        <div className='flex items-center justify-between space-y-2'>
+        <div className="flex gap-4">
+          {/* Left side - Prompt input and settings */}
+          <div className="w-1/3 space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Image Generation</CardTitle>
+                <CardDescription>Enter your prompt to generate AI images</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2 relative">
+                  {/* <Label htmlFor="prompt">Prompt</Label> */}
+                  <Textarea
+                    value={prompt}
+                    onChange={(e) => setPrompt(e.target.value)}
+                    id="prompt"
+                    placeholder="What do you want to see?"
+                    className="h-40"
+                  />
+                  <div className='absolute bottom-2 left-2'>
+                    <div className="flex flex-wrap gap-2">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center gap-1"
+                          >
+                            <span>Aspect Ratio</span>
+                            <IconChevronDown className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                          <DropdownMenuItem>
+                            Square (1:1)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Portrait (2:3)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Landscape (3:2)
+                          </DropdownMenuItem>
+                          <DropdownMenuItem>
+                            Wide (16:9)
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+
+
+                      {/* <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        <input type="checkbox" className="h-3 w-3" />
+                        <span>Square Aspect</span>
+                      </Button> */}
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        {/* <input type="checkbox" className="h-3 w-3" /> */}
+                        <span>No Style</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        {/* <input type="checkbox" className="h-3 w-3" /> */}
+                        <span>No Color</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        {/* <input type="checkbox" className="h-3 w-3" /> */}
+                        <span>No Lighting</span>
+                      </Button>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex items-center gap-1"
+                      >
+                        {/* <input type="checkbox" className="h-3 w-3" /> */}
+                        <span>No Composition</span>
+                      </Button>
+                    </div>
+
+                  </div>
+                </div>
+
+
+                <div className="flex justify-between">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <input type="checkbox" className="h-3 w-3" />
+                      <span>Negative Prompt</span>
+                    </Button>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <input type="checkbox" className="h-3 w-3" />
+                      <span>High Quality</span>
+                    </Button>
+                  </div>
+                  <div className='flex items-center space-x-2'>
+                    <Button variant="outline">Clear</Button>
+                    <Button variant="outline">Random</Button>
+                    <Button variant="default" onClick={onImageGenerate}>Generate</Button>
+                  </div>
+
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right side - Results display */}
+          <div className="w-2/3">
+            <div className="flex flex-col space-y-8">
+              {/* Message container */}
+              {chat?.messages?.map((message, index) => (
+                <div key={index} className="flex flex-col space-y-4">
+                  {/* Prompt text */}
+                  <div className="text-right text-sm text-gray-600">
+                    {message.prompt}
+                  </div>
+
+                  {/* Image grid */}
+                  <div className="grid grid-cols-3 gap-4">
+                    {message.images?.map((image, imageIndex) => (
+                      <div key={imageIndex} className="relative group">
+                        {/* Thumbnail image */}
+                        {!image.thumbnailUrl ? (
+                          <div className="w-full h-48 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-100"></div>
+                          </div>
+                        ) : (
+                          <img
+                            src={image.thumbnailUrl}
+                            alt={`Generated image ${imageIndex + 1}`}
+                            className="w-full h-48 object-cover rounded-lg"
+                          />
+                        )}
+
+                        {/* Download button */}
+                        <button
+                          className="absolute top-2 right-2 p-2 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={() => {
+                            // Download original image
+                            const link = document.createElement('a')
+                            link.href = image.originalUrl
+                            link.download = `generated-image-${index}-${imageIndex}.png`
+                            link.click()
+                          }}
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="white"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          >
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="7 10 12 15 17 10" />
+                            <line x1="12" y1="15" x2="12" y2="3" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+
+        {/* <div className='flex items-center justify-between space-y-2'>
           <h1 className='text-2xl font-bold tracking-tight md:text-3xl'>
             Dashboard
           </h1>
@@ -195,7 +399,7 @@ export default function Dashboard() {
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+        </Tabs> */}
       </LayoutBody>
     </Layout>
   )

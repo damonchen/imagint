@@ -41,53 +41,69 @@ class ChatService(object):
     def delete_chat(account: Account, chat_id: str) -> bool:
         return ChatRepository.delete_chat(account, chat_id)
 
+
+class ChatMessageService(object):
     @staticmethod
-    def create_message(account: Account, chat_id: str, image_path_ids: str) -> ChatMessage:
-        return ChatRepository.create_message(account, chat_id, image_path_ids)
+    def create_messages(
+        account: Account, chat_id: str, prompty: str, params: dict
+    ) -> ChatMessage:
+
+        params_str = json.dumps(params) if params else "{}"
+
+        message = ChatMessageRepository.create_message(
+            account, chat_id, prompty, params_str
+        )
+        # push the message to the backend service to generate image
+
+        return message
 
     @staticmethod
     def get_chat_messages(
-            account: Account, chat_id: str, page: int, page_size: int
+        account: Account, chat_id: str, page: int, page_size: int
     ) -> Pagination:
-        return ChatRepository.get_chat_messages(account, chat_id, page, page_size)
+        return ChatMessageRepository.get_chat_messages(
+            account, chat_id, page, page_size
+        )
 
     @staticmethod
     def get_chat_message(
-            account: Account, chat_id: str, message_id: str
+        account: Account, chat_id: str, message_id: str
     ) -> ChatMessage:
-        return ChatRepository.get_chat_message(account, chat_id, message_id)
+        return ChatMessageRepository.get_chat_message(account, chat_id, message_id)
 
     @staticmethod
     def update_message_translation(
-            account: Account,
-            message_id: str,
-            translated_text: str,
-            translated_image_path: str,
+        account: Account,
+        message_id: str,
+        translated_text: str,
+        translated_image_path: str,
     ) -> ChatMessage:
-        return ChatRepository.update_message_translation(
+        return ChatMessageRepository.update_message_translation(
             account, message_id, translated_text, translated_image_path
         )
 
     @staticmethod
     def delete_message(account: Account, message_id: str) -> bool:
-        return ChatRepository.delete_message(account, message_id)
+        return ChatMessageRepository.delete_message(account, message_id)
 
     @staticmethod
     @transaction
     def translate_message(account: Account, chat_id: str, files: List):
-        file_ids = [file['file_id'] for file in files]
+        file_ids = [file["file_id"] for file in files]
         image_path_ids = json.dumps(file_ids)
-        message = ChatRepository.create_message(account, chat_id, image_path_ids=image_path_ids)
+        message = ChatMessageRepository.create_message(
+            account, chat_id, image_path_ids=image_path_ids
+        )
 
         image_urls = [get_file_url(file_id) for file_id in file_ids]
 
         images = dict(zip(file_ids, image_urls))
 
         payload = {
-            'message': {
-                'chat_id': message.chat_id,
-                'account_id': message.account_id,
-                'images': images,
+            "message": {
+                "chat_id": message.chat_id,
+                "account_id": message.account_id,
+                "images": images,
                 # 'image_path_ids': file_ids,
                 # 'image_urls': image_urls,
             },

@@ -3,7 +3,7 @@ from flask_restful import marshal_with, reqparse
 from flask import stream_with_context
 
 from api.data.fields.task_fields import partial_task_fields
-from api.services.chat_service import ChatService
+from api.services.chat_service import ChatService, ChatMessageService
 from api.data.fields.chat import (
     page_chat_fields,
     chat_fields,
@@ -64,6 +64,22 @@ class ChatMessagesResource(WebApiResource):
         chat_messages = ChatService.get_chat_messages(account, chat_id, page, per_page)
 
         return chat_messages
+
+    @marshal_with(chat_message_fields)
+    def post(self, account, chat_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument("prompt", type=str, location="json", required=True)
+        parser.add_argument("params", type=dict, location="json", required=True)
+        args = parser.parse_args()
+
+        prompt = args.prompt
+        params = args.params
+
+        chat_message = ChatMessageService.create_messages(
+            account, chat_id, prompt, params
+        )
+
+        return chat_message
 
 
 class ChatTranslateResource(WebApiResource):

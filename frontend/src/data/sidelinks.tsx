@@ -42,6 +42,12 @@ export const sidelinks: SideLink[] = [
     href: '/',
     icon: <IconLayoutDashboard size={18} />,
   },
+  {
+    title: 'Chats',
+    label: '',
+    href: '/chats',
+    icon: <IconMessages size={18} />,
+  },
   // {
   //   title: 'Ticket',
   //   label: '',
