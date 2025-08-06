@@ -1,9 +1,10 @@
 import logging
+import json
 from flask_restful import marshal_with, reqparse
 from flask import stream_with_context
 
 from api.data.fields.task_fields import partial_task_fields
-from api.services.chat_service import ChatService, ChatMessageService
+from api.services.chat_service import ChatService, ChatMessageService, ChatMessageImageService
 from api.data.fields.chat import (
     page_chat_fields,
     chat_fields,
@@ -33,12 +34,12 @@ class ChatsResource(WebApiResource):
     @marshal_with(chat_fields)
     def post(self, account):
         parser = reqparse.RequestParser()
-        parser.add_argument("title", type=int, location="json", default="")
+        parser.add_argument("prompt", type=int, location="json", default="")
         args = parser.parse_args()
 
-        title = args.title
+        prompt = args.prompt
 
-        return ChatService.create_chat(account, title)
+        return ChatService.create_chat(account, prompt)
 
 
 class ChatResource(WebApiResource):
@@ -82,29 +83,29 @@ class ChatMessagesResource(WebApiResource):
         return chat_message
 
 
-class ChatTranslateResource(WebApiResource):
+# class ChatTranslateResource(WebApiResource):
 
-    @marshal_with(partial_task_fields)
-    def post(self, account, chat_id):
-        parser = reqparse.RequestParser()
-        parser.add_argument("files", type=list, location="json", default=None)
-        args = parser.parse_args()
+#     @marshal_with(partial_task_fields)
+#     def post(self, account, chat_id):
+#         parser = reqparse.RequestParser()
+#         parser.add_argument("files", type=list, location="json", default=None)
+#         args = parser.parse_args()
 
-        files = args.files
-        if files:
-            print("args files", files)
-            task = ChatService.translate_message(account, chat_id, files)
-            return task
+#         files = args.files
+#         if files:
+#             print("args files", files)
+#             task = ChatService.translate_message(account, chat_id, files)
+#             return task
 
 
-class ChatMessageStreamResource(WebApiResource):
+# class ChatMessageStreamResource(WebApiResource):
 
-    def get(self, account, chat_id):
-        # using yield for stream info response
-        def generate():
-            yield "hello world"
+#     def get(self, account, chat_id):
+#         # using yield for stream info response
+#         def generate():
+#             yield "hello world"
 
-        return stream_with_context(generate())
+#         return stream_with_context(generate())
 
 
 class ChatMessageResource(WebApiResource):
@@ -112,12 +113,29 @@ class ChatMessageResource(WebApiResource):
     @marshal_with(chat_message_fields)
     def get(self, account, chat_id, message_id):
         chat_message = ChatService.get_chat_message(account, chat_id, message_id)
+        # get message images
+        images = ChatMessageImageService.get_images(account, message_id)
+        chat_message.images = images
+
         return chat_message
+
+
+    @marshal_with(chat_message_fields)
+    def post(self, account, chat_id, message_id):
+        parser = reqparse.RequestParser()
+        parser.add_argument("images", type=str, location="json", required=True)
+        args = parser.parse_args()
+
+        images = args.images
+        images = json.loads(images)
+
+        ims = ChatMessageImageService.create_images(account, message_id, images)
+        return ims
 
 
 api.add_resource(ChatsResource, "/chats")
 api.add_resource(ChatMessagesResource, "/chats/<chat_id>/messages")
-api.add_resource(ChatTranslateResource, "/chats/<chat_id>/translate")
-api.add_resource(ChatMessageStreamResource, "/chats/<chat_id>/messages/stream")
+# api.add_resource(ChatTranslateResource, "/chats/<chat_id>/translate")
+# api.add_resource(ChatMessageStreamResource, "/chats/<chat_id>/messages/stream")
 api.add_resource(ChatMessageResource, "/chats/<chat_id>/messages/<message_id>")
 api.add_resource(ChatResource, "/chats/<chat_id>")

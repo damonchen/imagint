@@ -7,18 +7,25 @@ from .repository.task_repository import TaskRepository
 from .task_service import TaskService
 from api.extensions.database import transaction
 from .repository.attachment_repository import AttachmentRepository
-from .repository.chat_repository import ChatRepository
+from .repository.chat_repository import ChatRepository, ChatMessageRepository, ChatMessageImageRepository
 from api.data.models.chat import Chat, ChatMessage
 from api.data.models.account import Account
 from api.libs.url import get_file_url
+from .celery_service import CeleryService
 
 logger = logging.getLogger(__name__)
+
+
+def get_title_from_prompt(propmt):
+    return propmt
 
 
 class ChatService(object):
 
     @staticmethod
-    def create_chat(account: Account, title: str) -> Chat:
+    def create_chat(account: Account, prompt: str) -> Chat:
+        # get title from propmt
+        title = get_title_from_prompt(prompt)
         return ChatRepository.create_chat(account, title)
 
     @staticmethod
@@ -45,15 +52,17 @@ class ChatService(object):
 class ChatMessageService(object):
     @staticmethod
     def create_messages(
-        account: Account, chat_id: str, prompty: str, params: dict
+        account: Account, chat_id: str, prompt: str, params: dict
     ) -> ChatMessage:
 
         params_str = json.dumps(params) if params else "{}"
 
         message = ChatMessageRepository.create_message(
-            account, chat_id, prompty, params_str
+            account, chat_id, prompt, params_str
         )
-        # push the message to the backend service to generate image
+
+        # TODO: push the message to the backend service to generate image
+        CeleryService.send_task('create_chat_message', {'model': 'flux', 'chat_id': chat_id, 'message_id': message.id, 'prompt': prompt, 'params': params})
 
         return message
 
@@ -72,43 +81,22 @@ class ChatMessageService(object):
         return ChatMessageRepository.get_chat_message(account, chat_id, message_id)
 
     @staticmethod
-    def update_message_translation(
-        account: Account,
-        message_id: str,
-        translated_text: str,
-        translated_image_path: str,
-    ) -> ChatMessage:
-        return ChatMessageRepository.update_message_translation(
-            account, message_id, translated_text, translated_image_path
-        )
-
-    @staticmethod
     def delete_message(account: Account, message_id: str) -> bool:
         return ChatMessageRepository.delete_message(account, message_id)
 
+
+class ChatMessageImageService(object):
+
     @staticmethod
     @transaction
-    def translate_message(account: Account, chat_id: str, files: List):
-        file_ids = [file["file_id"] for file in files]
-        image_path_ids = json.dumps(file_ids)
-        message = ChatMessageRepository.create_message(
-            account, chat_id, image_path_ids=image_path_ids
-        )
+    def create_images(account, message_id, images):
+        ims = []
+        for image in images:
+            im = ChatMessageImageRepository.create_message_image(account, message_id, image)
+            ims.append(im)
 
-        image_urls = [get_file_url(file_id) for file_id in file_ids]
+        return ims
 
-        images = dict(zip(file_ids, image_urls))
-
-        payload = {
-            "message": {
-                "chat_id": message.chat_id,
-                "account_id": message.account_id,
-                "images": images,
-                # 'image_path_ids': file_ids,
-                # 'image_urls': image_urls,
-            },
-        }
-        logger.info("translate message payload is %s", payload)
-        task = TaskService.create_task_and_dispatch(account, payload)
-
-        return task
+    @staticmethod
+    def get_images(account, message_id):
+        return ChatMessageImageRepository.get_message_images(account, message_id)

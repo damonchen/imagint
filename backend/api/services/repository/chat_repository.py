@@ -1,6 +1,6 @@
 import logging
 from typing import Optional, List
-from api.data.models.chat import Chat, ChatMessage
+from api.data.models.chat import Chat, ChatMessage, ChatMessageImage
 from api.data.models.account import Account
 from api.extensions.database import db
 
@@ -57,7 +57,7 @@ class ChatMessageRepository(object):
 
     @staticmethod
     def create_message(
-        account: Account, chat_id: str, prompt: str, params: dict
+        account: Account, chat_id: str, prompt: str, params: str
     ) -> ChatMessage:
         message = ChatMessage(
             account_id=account.id, chat_id=chat_id, prompt=prompt, params=params
@@ -108,3 +108,28 @@ class ChatMessageRepository(object):
             db.session.flush()
             return True
         return False
+
+
+class ChatMessageImageRepository(object):
+
+    @staticmethod
+    def create_message_image(account: Account, message: ChatMessage | int, image: str):
+        if isinstance(message, ChatMessage):
+            message_id = message.id
+        else:
+            message_id = message
+
+        message_image = ChatMessageImage(account_id=account.id, chat_mesage_id=message_id, image_path=image)
+        db.session.add(message_image)
+        db.session.flush()
+
+        return message_image
+
+    @staticmethod
+    def get_message_images(account: Account, message: ChatMessage | int):
+        if isinstance(message, ChatMessage):
+            message_id = message.id
+        else:
+            message_id = message
+
+        return db.session.query(ChatMessageImage).filter(ChatMessageImage.account_id == account.id).filter(ChatMessageImage.chat_message_id == message.id).all()
