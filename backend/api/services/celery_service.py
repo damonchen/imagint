@@ -46,3 +46,12 @@ def send_register_token_mail(account, token):
     from api.services.mail_service import MailService
 
     MailService.send_register_token_mail(account, token)
+
+@celery_app
+def create_chat_message(chat_id, message_id, prompt, params):
+
+    # 开启进程，调用worker的model，执行对应的内容
+    from api.services.task_service import TaskService
+
+    images = TaskService.create_chat_images(chat_id, message_id, prompt, params)
+    # send message to our api service

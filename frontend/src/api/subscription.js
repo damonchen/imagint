@@ -1,41 +1,41 @@
-import { appApi } from '@/lib/api'
+import { authApi } from '@/lib/api'
 
 export async function getPlans() {
-  return appApi.get('/plans')
+  return authApi.get('/plans')
 }
 
 export async function payPlan(id) {
-  return appApi.get(`/plans/${id}/pay`)
+  return authApi.get(`/plans/${id}/pay`)
 }
 
 export async function getSubscriptions() {
-  return appApi.get(`/subscriptions`)
+  return authApi.get(`/subscriptions`)
 }
 
 export async function getSubscription(id) {
-  return appApi.get(`/subscription/${id}`)
+  return authApi.get(`/subscription/${id}`)
 }
 
 export async function getSubscriptionPayment(id) {
-  return appApi.get(`/subscription/${id}/payment`)
+  return authApi.get(`/subscription/${id}/payment`)
 }
 
 export async function cancelTransaction(id) {
-  return appApi.get(`/transaction/${id}/cancel`)
+  return authApi.get(`/transaction/${id}/cancel`)
 }
 
 export async function refundTransaction(id) {
-  return appApi.get(`/transaction/${id}/refund`)
+  return authApi.get(`/transaction/${id}/refund`)
 }
 
 export async function successTransaction(id) {
-  return appApi.get(`/transaction/${id}/success`)
+  return authApi.get(`/transaction/${id}/success`)
 }
 
 export async function failTransaction(id) {
-  return appApi.get(`/transaction/${id}/fail`)
+  return authApi.get(`/transaction/${id}/fail`)
 }
 
 export async function startTransaction(id) {
-  return appApi.get(`/transaction/${id}/start`)
+  return authApi.get(`/transaction/${id}/start`)
 }

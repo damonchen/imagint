@@ -31,11 +31,12 @@ class ChatMessage(db.Model):
     created_at = Column(DateTime, default=datetime.now)
 
 
-class ChatMessageImages(db.Model):
+class ChatMessageImage(db.Model):
     __tablename__ = "chat_message_images"
 
     id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
+    account_id = Column(Integer, nullable=False)
     chat_message_id = Column(String(64), ForeignKey("chat_messages.id"), nullable=False)
-    image_path = Column(Text, nullable=False)
+    image_path = Column(Text, nullable=True)
 
     chat_message = relationship("ChatMessage", back_populates="images")

@@ -32,29 +32,47 @@ import { RecentSales } from './components/recent-sales'
 import { Overview } from './components/overview'
 import { useSelf } from '@/provider/self-account-provider';
 import { Textarea } from '@/components/ui/textarea'
-import { useChatStore } from '@/store'
+import { useCurrentChatStore } from '@/store'
+import { createChatMessage, createChat } from '@/api/chat'
 
+
+interface PromptParams {
+
+}
 
 export default function Dashboard() {
   const { account } = useSelf();
-  const { chat } = useChatStore();
+  const { chat, setChat, setMessage } = useCurrentChatStore();
   const [prompt, setPrompt] = useState('');
+  const [params, setParams] = useState<PromptParams|null>(null);
 
-  const onImageGenerate = () => {
+  const onMessageGenerate = async () => {
     // 调用后台的api生成图片，然后图片以框架的方式显示
+    if(!chat.id) {
+      const newChat = await createChat(prompt)
+      setChat({...newChat, messages: [] });
+    }
+
+    const chatId = chat.id;
+    const message = await createChatMessage(chatId, prompt, params);
+    setMessage(message);
+
+    // 新增一个message
+    const messages = [...chat.messages, message];
+    setChat({ ...chat, messages });
   }
 
   return (
     <Layout>
       {/* ===== Top Heading ===== */}
-      <LayoutHeader>
+      {/* <LayoutHeader>
         <TopNav links={topNav} />
         <div className='ml-auto flex items-center space-x-4'>
           <Search />
           <ThemeSwitch />
           <UserNav />
         </div>
-      </LayoutHeader>
+      </LayoutHeader> */}
 
       {/* ===== Main ===== */}
       <LayoutBody className='space-y-4'>
@@ -176,13 +194,15 @@ export default function Dashboard() {
                       <span>High Quality</span>
                     </Button>
                   </div>
-                  <div className='flex items-center space-x-2'>
-                    <Button variant="outline">Clear</Button>
-                    <Button variant="outline">Random</Button>
-                    <Button variant="default" onClick={onImageGenerate}>Generate</Button>
-                  </div>
+  
 
                 </div>
+
+                <div className='flex items-center space-x-2'>
+                    <Button variant="outline">Clear</Button>
+                    <Button variant="outline">Random</Button>
+                    <Button variant="default" onClick={onMessageGenerate}>Generate</Button>
+                  </div>
               </CardContent>
             </Card>
           </div>
