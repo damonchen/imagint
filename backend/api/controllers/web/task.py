@@ -2,9 +2,13 @@ import logging
 import json
 from flask_restful import marshal_with, reqparse
 
-from services.redis_service import RedisService
+from api.services.redis_service import RedisService
 from .errors import NotFoundError
-from api.data.fields.task_fields import task_fields, task_pagination_fields
+from api.data.fields.task_fields import (
+    task_fields,
+    task_pagination_fields,
+    dispatch_task_fields,
+)
 from api.services.task_service import TaskService
 from api.services.chat_service import ChatMessageImageService
 from . import api
@@ -51,6 +55,7 @@ class TasksResource(WebApiResource):
 
 class TaskResource(TaskApiResource):
 
+    @marshal_with(dispatch_task_fields)
     def post(self):
         # 请求获取任务
         parser = reqparse.RequestParser()
@@ -62,25 +67,27 @@ class TaskResource(TaskApiResource):
 
         # get task from redis
         task_id = RedisService.lpop(f"task:{task_type}:{media_type}")
-        task = TaskService.load_task_by_task_id(task_id)
+        if not task_id:
+            # no task
+            return {"task_id": None}
+
+        task = TaskService.get_task(task_id)
         if task is None:
             logger.info(f"task {task_id} not found ")
-            return json.dumps({"task_id": None})
+            return {"task_id": None}
 
         account = task.account
         TaskService.update_task_status(account, task, status="running")
 
         if task:
             payload = json.loads(task.payload)
-            return json.dumps(
-                {
-                    "task_id": task_id,
-                    "prompt": payload["prompt"],
-                    "params": payload["params"],
-                }
-            )
+            return {
+                "task_id": task_id,
+                "prompt": payload["prompt"],
+                "params": payload["params"],
+            }
         else:
-            return json.dumps({"task_id": None})
+            return {"task_id": None}
 
 
 class TaskCompleteResource(TaskApiResource):

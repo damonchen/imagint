@@ -39,4 +39,4 @@ class ChatMessageImage(db.Model):
     chat_message_id = Column(String(64), ForeignKey("chat_messages.id"), nullable=False)
     image_path = Column(Text, nullable=True)
 
-    chat_message = relationship("ChatMessage", back_populates="images")
+    # chat_message = relationship("ChatMessage", back_populates="images")
