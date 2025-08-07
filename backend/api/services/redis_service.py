@@ -66,3 +66,41 @@ class RedisService(object):
         except Exception as e:
             logger.error(f"Failed to check key existence in Redis: {e}")
             raise
+
+    @staticmethod
+    def rpush(key: str, value: str) -> bool:
+        """
+        Push value to Redis list
+        Args:
+            key: Redis key
+            value: Value to push
+        Returns:
+            True if successful
+        """
+        try:
+            return redis_client.rpush(key, value)
+        except Exception as e:
+            logger.error(f"Failed to push value to Redis list: {e}")
+            raise
+
+    @staticmethod
+    def lpop(key: str) -> str:
+        """
+        Pop value from Redis list
+        """
+        try:
+            return redis_client.lpop(key)
+        except Exception as e:
+            logger.error(f"Failed to pop value from Redis list: {e}")
+            raise
+
+    @staticmethod
+    def lrange(key: str, start: int, end: int) -> list[str]:
+        """
+        Get values from Redis list
+        """
+        try:
+            return redis_client.lrange(key, start, end)
+        except Exception as e:
+            logger.error(f"Failed to get values from Redis list: {e}")
+            raise

@@ -62,3 +62,15 @@ class TaskStatus(StrEnum):
     SUCCESS = "success"
     FAILED = "failed"
     RUNNING = "running"
+
+
+class TaskWebTokenStatus(StrEnum):
+    ACTIVE = "active"
+    DISABLED = "disabled"
+
+    @staticmethod
+    def value_of(value):
+        for member in TaskWebTokenStatus:
+            if member.value == value:
+                return member
+        return ValueError("not matching enum found for value: {}".format(value))

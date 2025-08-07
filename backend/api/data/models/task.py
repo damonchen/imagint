@@ -25,3 +25,28 @@ class Task(db.Model):
         server_default=func.now(),
         server_onupdate=func.now(),
     )
+
+
+class TaskWebToken(db.Model):
+    __tablename__ = "task_web_tokens"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    token = db.Column(db.String(155), unique=True)
+    status = db.Column(db.String(50), default="active")
+    created_by = db.Column(db.Integer, nullable=False)
+    created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
+    updated_by = db.Column(db.Integer, nullable=False)
+    updated_at = db.Column(
+        TimeStamp,
+        nullable=False,
+        server_default=func.now(),
+        server_onupdate=func.now(),
+    )
+
+    @property
+    def is_active(self):
+        return self.status == 'active'
+
+    @property
+    def is_not_active(self):
+        return not self.is_active

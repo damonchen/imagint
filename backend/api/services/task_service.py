@@ -1,8 +1,12 @@
 import json
 import logging
+import datetime
 from api.data.models.enums import TaskStatus
 from api.services.errors.common import NotFoundError
-from api.services.repository.task_repository import TaskRepository
+from api.services.repository.task_repository import (
+    TaskRepository,
+    TaskWebTokenRepository,
+)
 from api.services.repository.account_repository import AccountRepository
 from api.services.rabbitmq_service import RabbitMQService
 from api.extensions.database import transaction
@@ -14,7 +18,7 @@ class TaskService(object):
 
     @staticmethod
     @transaction
-    def create_task_and_dispatch(account, payload):
+    def create_task(account, payload):
         """Create a new task and dispatch to target exchange and key"""
         # Create task record in database
         task = TaskRepository.create_task(
@@ -25,17 +29,6 @@ class TaskService(object):
 
         if not task:
             raise NotFoundError("Failed to create task")
-
-        task_message = {
-            "task_id": task.task_id,
-            "payload": payload,
-        }
-
-        logger.info("push task message to the queue %s", task_message)
-
-        RabbitMQService.publish_task(
-            payload=task_message,
-        )
 
         return task
 
@@ -60,9 +53,18 @@ class TaskService(object):
         if not task:
             raise NotFoundError("Task not found")
 
-        return TaskRepository.update_task(
-            task=task, account=account, status=status, result=result
-        )
+        if status == TaskStatus.COMPLETED.value:
+            return TaskRepository.update_task(
+                task=task,
+                account=account,
+                status=status,
+                result=result,
+                done_at=datetime.datetime.now(datetime.UTC),
+            )
+        else:
+            return TaskRepository.update_task(
+                task=task, account=account, status=status, result=result
+            )
 
     @staticmethod
     def get_task(task_id):
@@ -103,3 +105,15 @@ class TaskService(object):
         return TaskRepository.update_task(
             task=task, account=account, status=TaskStatus.CANCELLED.value
         )
+
+
+class TaskWorkerService(object):
+
+    @staticmethod
+    def get_task_token(token):
+        task_web_token = TaskWebTokenRepository.load_task_web_token(token)
+        return task_web_token
+
+    @staticmethod
+    def disable_web_token(token):
+        return TaskWebTokenRepository.disable_web_token(token)

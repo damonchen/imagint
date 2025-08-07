@@ -7,6 +7,7 @@ from werkzeug.exceptions import NotFound, Unauthorized
 from api.extensions.login import token_coder
 from api.extensions.database import db
 from api.data.models.account import Account
+from api.services.task_service import TaskWorkerService
 
 
 def validate_api_token(func):
@@ -17,6 +18,32 @@ def validate_api_token(func):
         return func(account, *args, **kwargs)
 
     return wrapper
+
+
+def validate_task_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        task_web_token = decode_task_token()
+        g.task_web_token = task_web_token
+
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def decode_task_token():
+    api_key = request.headers.get("X-API-KEY")
+    if api_key is None:
+        raise Unauthorized("X-API-KEY header must be provided")
+
+    task_web_token = TaskWorkerService.get_task_token(api_key)
+    if task_web_token is None:
+        raise Unauthorized("Invalid API key")
+
+    if task_web_token.is_not_active:
+        raise Unauthorized("Invalid API key")
+
+    return task_web_token
 
 
 def decode_jwt_token():
@@ -43,3 +70,7 @@ def decode_jwt_token():
 
 class WebApiResource(Resource):
     method_decorators = [validate_api_token]
+
+
+class TaskApiResource(Resource):
+    method_decorators = [validate_task_token]
