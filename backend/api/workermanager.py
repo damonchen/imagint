@@ -5,7 +5,7 @@ import subprocess
 import os
 
 TASK_TYPE = "qwen"  # 指定任务类型
-API_BASE_URL = "http://localhost:8000"  # 根据实际服务器地址调整
+API_BASE_URL = "http://localhost:5050"  # 根据实际服务器地址调整
 API_KEY = "1234567890"
 
 logger = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ while True:
 
         if response.status_code == 200:
             task_data = response.json()
+            print("debug task data", task_data)
 
             if task_data:
                 task_id = task_data.get("task_id")

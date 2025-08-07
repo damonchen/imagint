@@ -40,3 +40,10 @@ task_status_fields = {
     "result": fields.Raw(attribute="result"),
     "done_at": TimestampField(attribute="done_at"),
 }
+
+
+dispatch_task_fields = {
+    "task_id": fields.String(attribute="task_id"),
+    "prompt": fields.String(attribute="prompt"),
+    "params": fields.Raw(attribute="params"),
+}

@@ -24,6 +24,9 @@ class CeleryProxy:
 
         return decorator
 
+    def __call__(self, *args, **kwargs):
+        print("self", self, *args, **kwargs)
+
     def __getattr__(self, name):
         if self._celery is None:
             raise RuntimeError("Celery extension is not initialized")
