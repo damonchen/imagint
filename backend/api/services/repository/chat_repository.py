@@ -19,7 +19,7 @@ class ChatRepository(object):
         return Chat.query.filter_by(account_id=account.id).get(chat_id)
 
     @staticmethod
-    def get_chats_by_page(account: Account, page: int, page_size: int) -> List[Chat]:
+    def get_chats_by_page(account: Account, page: int, page_size: int) :
         return (
             Chat.query.filter_by(account_id=account.id)
             .order_by(Chat.created_at.desc())
@@ -69,7 +69,7 @@ class ChatMessageRepository(object):
     @staticmethod
     def get_chat_messages(
         account: Account, chat_id: str, page: int, page_size: int
-    ) -> List[ChatMessage]:
+    ):
         return (
             ChatMessage.query.filter_by(account_id=account.id, chat_id=chat_id)
             .order_by(ChatMessage.created_at.desc())
@@ -119,7 +119,9 @@ class ChatMessageImageRepository(object):
         else:
             message_id = message
 
-        message_image = ChatMessageImage(account_id=account.id, chat_mesage_id=message_id, image_path=image)
+        message_image = ChatMessageImage(
+            account_id=account.id, chat_mesage_id=message_id, image_path=image
+        )
         db.session.add(message_image)
         db.session.flush()
 
@@ -132,4 +134,9 @@ class ChatMessageImageRepository(object):
         else:
             message_id = message
 
-        return db.session.query(ChatMessageImage).filter(ChatMessageImage.account_id == account.id).filter(ChatMessageImage.chat_message_id == message.id).all()
+        return (
+            db.session.query(ChatMessageImage)
+            .filter(ChatMessageImage.account_id == account.id)
+            .filter(ChatMessageImage.chat_message_id == message.id)
+            .all()
+        )

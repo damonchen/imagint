@@ -1,6 +1,6 @@
-from api.data.models.enums import TaskStatus
+from api.data.models.enums import TaskStatus, TaskWebTokenStatus
 from api.extensions.database import db
-from api.data.models.task import Task
+from api.data.models.task import Task, TaskWebToken
 from api.utils.uuid import generate_db_id
 
 
@@ -63,3 +63,39 @@ class TaskRepository(object):
         db.session.flush()
 
         return task
+
+
+class TaskWebTokenRepository(object):
+    @staticmethod
+    def create_task_web_token(task_id, token):
+        """Create a new task web token"""
+        task_web_token = TaskWebToken(
+            token=token,
+        )
+        db.session.add(task_web_token)
+        db.session.flush()
+        return task_web_token
+
+    @staticmethod
+    def load_task_web_token(token):
+        """Load task web token"""
+        return (
+            db.session.query(TaskWebToken).filter(TaskWebToken.token == token).first()
+        )
+
+    @staticmethod
+    def delete_task_web_token(token):
+        """Delete task web token"""
+        db.session.query(TaskWebToken).filter(TaskWebToken.token == token).delete()
+        db.session.flush()
+
+    @staticmethod
+    def disable_web_token(token):
+        """Disable task web token"""
+        task_web_token = TaskWebToken.query.filter(TaskWebToken.token == token).first()
+        if task_web_token:
+            task_web_token.status = TaskWebTokenStatus.DISABLED.value
+            db.session.add(task_web_token)
+            db.session.flush()
+            return task_web_token
+        return None

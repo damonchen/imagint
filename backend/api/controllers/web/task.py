@@ -1,10 +1,16 @@
 import logging
+import json
 from flask_restful import marshal_with, reqparse
+
+from services.redis_service import RedisService
 from .errors import NotFoundError
 from api.data.fields.task_fields import task_fields, task_pagination_fields
 from api.services.task_service import TaskService
+from api.services.chat_service import ChatMessageImageService
 from . import api
-from .wraps import WebApiResource
+from .wraps import WebApiResource, TaskApiResource
+
+logger = logging.getLogger(__name__)
 
 
 class TasksResource(WebApiResource):
@@ -43,28 +49,74 @@ class TasksResource(WebApiResource):
         return task
 
 
-class TaskResource(WebApiResource):
+class TaskResource(TaskApiResource):
 
-    @marshal_with(task_fields)
-    def get(self, account, task_id):
-        task = TaskService.get_task(task_id)
-        if task is None or task.account_id != account.id:
-            raise NotFoundError()
-        return task
-
-    @marshal_with(task_fields)
-    def put(self, account, task_id):
+    def post(self):
+        # 请求获取任务
         parser = reqparse.RequestParser()
+        parser.add_argument("task_type", type=str, location="json", required=True)
+        parser.add_argument("media_type", type=str, location="json", required=False)
+        args = parser.parse_args()
+        task_type = args.task_type
+        media_type = args.media_type
+
+        # get task from redis
+        task_id = RedisService.lpop(f"task:{task_type}:{media_type}")
+        task = TaskService.load_task_by_task_id(task_id)
+        if task is None:
+            logger.info(f"task {task_id} not found ")
+            return json.dumps({"task_id": None})
+
+        account = task.account
+        TaskService.update_task_status(account, task, status="running")
+
+        if task:
+            payload = json.loads(task.payload)
+            return json.dumps(
+                {
+                    "task_id": task_id,
+                    "prompt": payload["prompt"],
+                    "params": payload["params"],
+                }
+            )
+        else:
+            return json.dumps({"task_id": None})
+
+
+class TaskCompleteResource(TaskApiResource):
+
+    @marshal_with(task_fields)
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("task_id", type=str, location="json", required=True)
         parser.add_argument("status", type=str, location="json", required=True)
         parser.add_argument("result", type=dict, location="json")
         args = parser.parse_args()
 
+        task_id = args.task_id
         status = args.status
         result = args.result
 
-        task = TaskService.update_task_status(account, task_id, status, result)
+        task = TaskService.load_task_by_task_id(task_id)
+        if task is None:
+            logger.info(f"task not valid {task_id}")
+            return json.dumps({"task_id": None})
+
+        account = task.account
+
+        payload = json.loads(task.payload)
+
+        media_type = result.get("media_type")
+        if media_type == "image":
+            images = result.get("images")
+            message_id = payload.get("message_id")
+
+            ChatMessageImageService.create_images(account, message_id, images)
+
+        task = TaskService.update_task_status(task_id, status, result)
         return task
 
 
 api.add_resource(TasksResource, "/tasks")
-api.add_resource(TaskResource, "/tasks/<task_id>")
+api.add_resource(TaskResource, "/task")
+api.add_resource(TaskCompleteResource, "/task/complete")

@@ -5,13 +5,17 @@ from typing import List
 
 from .repository.task_repository import TaskRepository
 from .task_service import TaskService
+from .redis_service import RedisService
 from api.extensions.database import transaction
 from .repository.attachment_repository import AttachmentRepository
-from .repository.chat_repository import ChatRepository, ChatMessageRepository, ChatMessageImageRepository
+from .repository.chat_repository import (
+    ChatRepository,
+    ChatMessageRepository,
+    ChatMessageImageRepository,
+)
 from api.data.models.chat import Chat, ChatMessage
 from api.data.models.account import Account
 from api.libs.url import get_file_url
-from .celery_service import CeleryService
 
 logger = logging.getLogger(__name__)
 
@@ -61,8 +65,21 @@ class ChatMessageService(object):
             account, chat_id, prompt, params_str
         )
 
-        # TODO: push the message to the backend service to generate image
-        CeleryService.send_task('create_chat_message', {'model': 'flux', 'chat_id': chat_id, 'message_id': message.id, 'prompt': prompt, 'params': params})
+        model = params.get("model")
+
+        # create a task to save the chat message task
+        payload = {
+            "model": model,
+            "task_type": model,
+            "chat_id": chat_id,
+            "message_id": message.id,
+            "prompt": prompt,
+            "params": params,
+        }
+
+        task = TaskService.create_task(account, payload)
+        # send task info to the backend service to generate image
+        RedisService.rpush(f"task:{model}:image", task.task_id)
 
         return message
 
@@ -92,7 +109,9 @@ class ChatMessageImageService(object):
     def create_images(account, message_id, images):
         ims = []
         for image in images:
-            im = ChatMessageImageRepository.create_message_image(account, message_id, image)
+            im = ChatMessageImageRepository.create_message_image(
+                account, message_id, image
+            )
             ims.append(im)
 
         return ims
