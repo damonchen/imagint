@@ -1,100 +1,101 @@
-import json
-import threading
-import pika
+import time
 import requests
-import argparse
-import configparser
+import logging
 import subprocess
-from concurrent.futures import ThreadPoolExecutor
+import os
 
+TASK_TYPE = "qwen"  # 指定任务类型
+API_BASE_URL = "http://localhost:8000"  # 根据实际服务器地址调整
+API_KEY = "1234567890"
 
-class Config(object):
-    def __init__(self, config_file):
-        self.config_file = config_file
-        self.config = configparser.ConfigParser()
-        self.config.read(config_file)
-        self.model_threads = self.config.getint('worker', 'model_threads')
-        self.rabbitmq_host = self.config.get('rabbitmq', 'host')
-        self.rabbitmq_port = self.config.getint('rabbitmq', 'port')
-        self.rabbitmq_username = self.config.get('rabbitmq', 'username')
-        self.rabbitmq_password = self.config.get('rabbitmq', 'password')
-        self.api_url = self.config.get('api', 'url')
-        self.api_key = self.config.get('api', 'key')
+logger = logging.getLogger(__name__)
 
-class WorkerManager(object):
-    def __init__(self, config):
-        self.config = config
-        self.model_threads = self.config.model_threads
-        self.executor = ThreadPoolExecutor(max_workers=self.model_threads)
-        
-        # RabbitMQ connection
-        self.connection = pika.BlockingConnection(pika.ConnectionParameters(self.rabbitmq_host, self.rabbitmq_port, self.rabbitmq_username, self.rabbitmq_password))
-        self.channel = self.connection.channel()
-        self.channel.queue_declare(queue='model_queue')
+while True:
+    try:
+        # 获取任务
+        response = requests.post(
+            f"{API_BASE_URL}/api/v1/task",
+            json={"task_type": TASK_TYPE, "media_type": "image"},
+            headers={"Content-Type": "application/json", "X-API-KEY": API_KEY},
+        )
 
-    def process_message(self, message):
-        try:
-            # Parse message
-            data = json.loads(message)
-            model = data['model']
-            chat_id = data['chat_id']
-            user_plan = data['user_plan']
-            message_id = data['message_id']
-            prompt = data['prompt']
-            params = data.get('params', {})
+        if response.status_code == 200:
+            task_data = response.json()
 
-            # Start worker process
-            process = subprocess.Popen(
-                ["python3", f"workers/{model}_worker.py"],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                text=True
-            )
+            if task_data:
+                task_id = task_data.get("task_id")
+            else:
+                task_id = None
 
-            # Send parameters to worker
-            worker_input = json.dumps({
-                "prompt": prompt,
-                "params": params,
-                "user_plan": user_plan,
-            })
-            stdout, stderr = process.communicate(input=worker_input)
+            if task_id is not None:
+                logger.info(f"get new task {task_id}")
+                prompt = task_data.get("prompt", "")
+                params = task_data.get("params", {})
 
-            if stderr:
-                print(f"Worker error: {stderr}")
-                return
+                # 从params中获取参数
+                ratio = params.get("ratio", "16:9")
+                batch_size = params.get("batch_size", 4)
+                seed = params.get("seed")
 
-            # Parse worker response
-            result = json.loads(stdout)
-            
-            # Send results back to API
-            api_url = f"{self.config.api_url}/chat/{chat_id}/messages/{message_id}"
-            requests.post(api_url, json={"images": result.get("images", [])}, headers={"Authorization": f"Bearer {self.config.api_key}"})
+                # 执行任务
+                process = None
+                try:
+                    cmd = (
+                        [
+                            "modal",
+                            "run",
+                            "qwen.py",
+                            "--prompt",
+                            prompt,
+                            "--ratio",
+                            ratio,
+                            "--batch_size",
+                            str(batch_size),
+                        ],
+                    )
+                    if seed:
+                        cmd.extend(["--seed", str(seed)])
 
-        except Exception as e:
-            print(f"Error processing message: {e}")
+                    # Run subprocess with 10 second timeout
+                    process = subprocess.run(
+                        cmd,
+                        capture_output=True,
+                        timeout=10,
+                        text=True,
+                        check=True,
+                    )
+                except subprocess.TimeoutExpired:
+                    print("Process timed out after 10 seconds")
+                    # raise
+                except subprocess.CalledProcessError as e:
+                    print(f"Process failed with return code {e.returncode}")
+                    print(f"Error output: {e.stderr}")
+                    # raise
+                except Exception as e:
+                    print(f"Failed to run subprocess: {str(e)}")
+                    # raise
 
-    def callback(self, ch, method, properties, body):
-        # Submit task to thread pool
-        self.executor.submit(self.process_message, body.decode())
-        ch.basic_ack(delivery_tag=method.delivery_tag)
+                if process is not None:
+                    file_paths = process.stdout.split("\n")
 
-    def run(self):
-        self.channel.basic_qos(prefetch_count=self.model_threads)
-        self.channel.basic_consume(queue='model_queue', on_message_callback=self.callback)
-        print("Worker manager started. Waiting for messages...")
-        self.channel.start_consuming()
+                    # 通知任务完成
+                    requests.post(
+                        f"{API_BASE_URL}/api/v1/task/complete",
+                        json={
+                            "task_id": task_id,
+                            "status": "completed",
+                            "result": {"images": file_paths, "media_type": "image"},
+                        },
+                        headers={
+                            "Content-Type": "application/json",
+                            "X-API-KEY": API_KEY,
+                        },
+                    )
 
-if __name__ == "__main__":
-    # 读取配置文件，获取模型线程数，rabbitmq信息，以及api 服务地址，配置文件为ini文件格式？
-    # 通过argparse来获取config文件位置
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--config', type=str, default='config.ini')
-    args = parser.parse_args()
+        # 等待1秒后继续
+        time.sleep(1)
 
-    config_file = args.config
-
-    config = Config(config_file=config_file)
-
-    manager = WorkerManager(config=config)
-    manager.run()
+    except Exception as e:
+        print(f"Error occurred: {str(e)}")
+        time.sleep(1)
+        continue
