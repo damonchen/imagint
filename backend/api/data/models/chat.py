@@ -6,11 +6,13 @@ from sqlalchemy import Column, Index, String, DateTime, ForeignKey, Text, Intege
 from sqlalchemy.orm import relationship
 from api.extensions.database import db
 
+from api.data.models.types import JSONType
+
 
 class Chat(db.Model):
     __tablename__ = "chats"
 
-    id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = Column(String(512), nullable=False)
     account_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
@@ -21,22 +23,27 @@ class ChatMessage(db.Model):
 
     __table_args__ = (Index("uix_chat", "chat_id"),)
 
-    id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     chat_id = Column(String(64), nullable=False)
     account_id = Column(Integer, nullable=False)
     type = Column(String(32), default="text")  # text, image, etc.
     prompt = Column(Text)  # image path，储存的是attachment中的file_id的列表？
-    params = Column(Text)  # 其他参数
+    params = Column(JSONType)  # 其他参数
+    status = Column(String(32), default="pending")  # pending, running, success, failed
     image_path = Column(Text, nullable=True)  # 如果是图片消息，存储图片路径
     created_at = Column(DateTime, default=datetime.now)
+
+    @property
+    def image_count(self):
+        return self.params.get("image_count", 0)
 
 
 class ChatMessageImage(db.Model):
     __tablename__ = "chat_message_images"
 
-    id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     account_id = Column(Integer, nullable=False)
-    chat_message_id = Column(String(64), ForeignKey("chat_messages.id"), nullable=False)
+    chat_message_id = Column(db.Integer, ForeignKey("chat_messages.id"), nullable=False)
     image_path = Column(Text, nullable=True)
 
     # chat_message = relationship("ChatMessage", back_populates="images")

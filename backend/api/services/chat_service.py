@@ -58,14 +58,9 @@ class ChatMessageService(object):
     def create_messages(
         account: Account, chat_id: str, prompt: str, params: dict
     ) -> ChatMessage:
+        message = ChatMessageRepository.create_message(account, chat_id, prompt, params)
 
-        params_str = json.dumps(params) if params else "{}"
-
-        message = ChatMessageRepository.create_message(
-            account, chat_id, prompt, params_str
-        )
-
-        model = params.get("model")
+        model = params.get("model", "qwen-image")
 
         # create a task to save the chat message task
         payload = {
@@ -79,7 +74,14 @@ class ChatMessageService(object):
 
         task = TaskService.create_task(account, payload)
         # send task info to the backend service to generate image
-        RedisService.rpush(f"task:{model}:image", task.task_id)
+        RedisService.rpush(
+            f"task:{model}:image",
+            json.dumps(
+                {
+                    "task_id": task.task_id,
+                }
+            ),
+        )
 
         return message
 

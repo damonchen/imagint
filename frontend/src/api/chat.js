@@ -9,7 +9,7 @@ export async function createChat(prompt) {
 export async function createChatMessage(chatId, prompt, promptParams) {
   return authApi.post(`/chats/${chatId}/messages`, {
     prompt,
-    promptParams,
+    params: promptParams,
   })
 }
 

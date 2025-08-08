@@ -8,7 +8,14 @@ const IS_RUNNING_GITPOD = process.env['GITPOD_WORKSPACE_ID'] !== null && process
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(
+    {
+      babel: {
+        plugins: ['styled-jsx/babel']
+      }
+    }
+
+  )],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -17,7 +24,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5080/api',
+        target: 'http://localhost:5050/api',
         changeOrigin: true,
         rewrite: (path) => path.replace('\/api/', ''),
       }

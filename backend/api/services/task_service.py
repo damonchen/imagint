@@ -53,7 +53,7 @@ class TaskService(object):
         if not task:
             raise NotFoundError("Task not found")
 
-        if status == TaskStatus.COMPLETED.value:
+        if status in [TaskStatus.SUCCESS.value, TaskStatus.FAILED.value]:
             return TaskRepository.update_task(
                 task=task,
                 account=account,
@@ -108,6 +108,10 @@ class TaskService(object):
 
 
 class TaskWorkerService(object):
+
+    @staticmethod
+    def create_task_worker(token):
+        return TaskWebTokenRepository.create_task_web_token(token)
 
     @staticmethod
     def get_task_token(token):

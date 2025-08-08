@@ -7,6 +7,7 @@ from .data.models.account import Account
 from .extensions.database import db
 from .libs.helper import validate_email
 from .services.account_service import AccountService
+from .services.task_service import TaskWorkerService
 
 
 @click.command("reset-password", help="Reset the account password.")
@@ -93,6 +94,8 @@ def init_db():
     account = AccountService.active_account(account)
     print("account", account)
 
+    TaskWorkerService.create_task_worker("1234567890")
+
     db.session.commit()
 
 
@@ -110,4 +113,3 @@ def register_command(app):
     app.cli.add_command(reset_email)
     app.cli.add_command(init_db)
     app.cli.add_command(reset_db)
-

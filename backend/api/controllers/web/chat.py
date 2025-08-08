@@ -4,13 +4,19 @@ from flask_restful import marshal_with, reqparse
 from flask import stream_with_context
 
 from api.data.fields.task_fields import partial_task_fields
-from api.services.chat_service import ChatService, ChatMessageService, ChatMessageImageService
+from api.services.chat_service import (
+    ChatService,
+    ChatMessageService,
+    ChatMessageImageService,
+)
 from api.data.fields.chat import (
     page_chat_fields,
     chat_fields,
     page_chat_message_fields,
     chat_message_fields,
 )
+from pygments.lexer import default
+
 from . import api
 from .wraps import WebApiResource
 
@@ -34,7 +40,7 @@ class ChatsResource(WebApiResource):
     @marshal_with(chat_fields)
     def post(self, account):
         parser = reqparse.RequestParser()
-        parser.add_argument("prompt", type=int, location="json", default="")
+        parser.add_argument("prompt", type=str, location="json", default="")
         args = parser.parse_args()
 
         prompt = args.prompt
@@ -119,17 +125,19 @@ class ChatMessageResource(WebApiResource):
 
         return chat_message
 
-
     @marshal_with(chat_message_fields)
     def post(self, account, chat_id, message_id):
         parser = reqparse.RequestParser()
-        parser.add_argument("images", type=str, location="json", required=True)
+        parser.add_argument("prompt", type=str, location="json", required=True)
+        parser.add_argument("params", type=dict, location="json", required=True)
         args = parser.parse_args()
 
-        images = args.images
-        images = json.loads(images)
+        prompt = args.prompt
+        params = args.params if args.params else {}
 
-        ims = ChatMessageImageService.create_images(account, message_id, images)
+        print('current params', params)
+
+        ims = ChatMessageService.create_messages(account, chat_id, message_id, prompt, params)
         return ims
 
 

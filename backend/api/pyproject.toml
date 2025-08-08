@@ -32,3 +32,6 @@ dependencies = [
     "validator-collection>=1.5.0",
     "werkzeug~=3.0.1",
 ]
+
+[tool.uv]
+index-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
