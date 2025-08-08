@@ -3,10 +3,12 @@ import requests
 import logging
 import subprocess
 import os
+import json
 
-TASK_TYPE = "qwen"  # 指定任务类型
+TASK_TYPE = "qwen-image"  # 指定任务类型
 API_BASE_URL = "http://localhost:5050"  # 根据实际服务器地址调整
 API_KEY = "1234567890"
+MODAL_PATH = "/mnt/f/dev/Imagint/src/backend/.venv/bin/python"
 
 logger = logging.getLogger(__name__)
 
@@ -40,33 +42,44 @@ while True:
 
                 # 执行任务
                 process = None
+                stdout_output = None
+                stderr_output = None
                 try:
-                    cmd = (
-                        [
-                            "modal",
-                            "run",
-                            "qwen.py",
-                            "--prompt",
-                            prompt,
-                            "--ratio",
-                            ratio,
-                            "--batch_size",
-                            str(batch_size),
-                        ],
-                    )
-                    if seed:
-                        cmd.extend(["--seed", str(seed)])
-
                     # Run subprocess with 10 second timeout
-                    process = subprocess.run(
-                        cmd,
-                        capture_output=True,
-                        timeout=10,
+                    process = subprocess.Popen(
+                        [MODAL_PATH, "workers/qwen.py"],
+                        stdin=subprocess.PIPE,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
                         text=True,
-                        check=True,
                     )
+
+                    data = json.dumps(
+                        {
+                            "prompt": prompt,
+                            "params": params,
+                            "ratio": ratio,
+                            "batch_size": batch_size,
+                            "seed": seed,
+                        }
+                    )
+                    print(data)
+
+                    stdout_output, stderr_output = process.communicate(
+                        input=data, timeout=600
+                    )
+
+                    if stdout_output:
+                        print(stdout_output.strip())
+                        # 解析输出
+                        if "images" in stdout_output:
+                            # 提取图片路径
+                            images = stdout_output.split("images: ")[1].strip()
+                            images = json.loads(images)
+                            file_paths.extend(images)
+
                 except subprocess.TimeoutExpired:
-                    print("Process timed out after 10 seconds")
+                    print("Process timed out after 600 seconds")
                     # raise
                 except subprocess.CalledProcessError as e:
                     print(f"Process failed with return code {e.returncode}")
@@ -76,8 +89,8 @@ while True:
                     print(f"Failed to run subprocess: {str(e)}")
                     # raise
 
-                if process is not None:
-                    file_paths = process.stdout.split("\n")
+                if stdout_output is not None:
+                    file_paths = stdout_output.split("\n")
 
                     # 通知任务完成
                     requests.post(
@@ -92,7 +105,8 @@ while True:
                             "X-API-KEY": API_KEY,
                         },
                     )
-
+        else:
+            print("get task may occur error", response.status_code)
         # 等待1秒后继续
         time.sleep(1)
 

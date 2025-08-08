@@ -37,23 +37,38 @@ import { createChatMessage, createChat } from '@/api/chat'
 
 
 interface PromptParams {
-
+  model: string
+  aspect_ratio: string
+  style: string | null
+  color: string | null
+  lighting: string | null
+  composition: string | null
+  negative_prompt: string | null
 }
 
 export default function Dashboard() {
   const { account } = useSelf();
   const { chat, setChat, setMessage } = useCurrentChatStore();
   const [prompt, setPrompt] = useState('');
-  const [params, setParams] = useState<PromptParams|null>(null);
+  const [params, setParams] = useState<PromptParams>({
+    model: 'qwen-image',
+    aspect_ratio: '1:1',
+    style: null,
+    color: null,
+    lighting: null,
+    composition: null,
+    negative_prompt: null,
+  });
 
   const onMessageGenerate = async () => {
     // 调用后台的api生成图片，然后图片以框架的方式显示
-    if(!chat.id) {
+    let chatId = chat.id;
+    if (!chatId) {
       const newChat = await createChat(prompt)
-      setChat({...newChat, messages: [] });
+      setChat({ ...newChat, messages: [] });
+      chatId = newChat.id
     }
 
-    const chatId = chat.id;
     const message = await createChatMessage(chatId, prompt, params);
     setMessage(message);
 
@@ -94,37 +109,40 @@ export default function Dashboard() {
                     placeholder="What do you want to see?"
                     className="h-40"
                   />
-                  <div className='absolute bottom-2 left-2'>
-                    <div className="flex flex-wrap gap-2">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center gap-1"
-                          >
-                            <span>Aspect Ratio</span>
-                            <IconChevronDown className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                          <DropdownMenuItem>
-                            Square (1:1)
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Portrait (2:3)
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Landscape (3:2)
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            Wide (16:9)
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+
+                </div>
+
+                <div className='bottom-2 left-2'>
+                  <div className="flex flex-wrap gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-1"
+                        >
+                          <span>Aspect Ratio</span>
+                          <IconChevronDown className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuItem>
+                          Square (1:1)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Portrait (2:3)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Landscape (3:2)
+                        </DropdownMenuItem>
+                        <DropdownMenuItem>
+                          Wide (16:9)
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
 
-                      {/* <Button
+                    {/* <Button
                         variant="outline"
                         size="sm"
                         className="flex items-center gap-1"
@@ -133,46 +151,44 @@ export default function Dashboard() {
                         <span>Square Aspect</span>
                       </Button> */}
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        {/* <input type="checkbox" className="h-3 w-3" /> */}
-                        <span>No Style</span>
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      {/* <input type="checkbox" className="h-3 w-3" /> */}
+                      <span>No Style</span>
+                    </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        {/* <input type="checkbox" className="h-3 w-3" /> */}
-                        <span>No Color</span>
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      {/* <input type="checkbox" className="h-3 w-3" /> */}
+                      <span>No Color</span>
+                    </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        {/* <input type="checkbox" className="h-3 w-3" /> */}
-                        <span>No Lighting</span>
-                      </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      {/* <input type="checkbox" className="h-3 w-3" /> */}
+                      <span>No Lighting</span>
+                    </Button>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center gap-1"
-                      >
-                        {/* <input type="checkbox" className="h-3 w-3" /> */}
-                        <span>No Composition</span>
-                      </Button>
-                    </div>
-
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      {/* <input type="checkbox" className="h-3 w-3" /> */}
+                      <span>No Composition</span>
+                    </Button>
                   </div>
-                </div>
 
+                </div>
 
                 <div className="flex justify-between">
                   <div className="flex items-center gap-2">
@@ -194,15 +210,15 @@ export default function Dashboard() {
                       <span>High Quality</span>
                     </Button>
                   </div>
-  
+
 
                 </div>
 
                 <div className='flex items-center space-x-2'>
-                    <Button variant="outline">Clear</Button>
-                    <Button variant="outline">Random</Button>
-                    <Button variant="default" onClick={onMessageGenerate}>Generate</Button>
-                  </div>
+                  <Button variant="outline">Clear</Button>
+                  <Button variant="outline">Random</Button>
+                  <Button variant="default" onClick={onMessageGenerate}>Generate</Button>
+                </div>
               </CardContent>
             </Card>
           </div>

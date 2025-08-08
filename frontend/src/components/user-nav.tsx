@@ -53,7 +53,7 @@ export function UserNav() {
   const onLogoutClicked = () => {
     setTriggerLogout(true);
     setToken('');
-    navigate('/auth/sign-in')
+    navigate('#/auth/sign-in')
   }
 
   return (

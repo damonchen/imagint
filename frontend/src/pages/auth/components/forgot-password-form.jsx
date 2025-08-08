@@ -52,7 +52,7 @@ export default function ForgotPasswordForm() {
               <div className={cn('flex items-center')}>
                 <FormLabel>Email</FormLabel>
                 <Link
-                  to='/auth/sign-in'
+                  to='/#/auth/sign-in'
                   className='ml-auto inline-block text-sm underline'
                 >
                   Back to sign in

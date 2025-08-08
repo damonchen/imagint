@@ -2,11 +2,11 @@ import { appApi } from '@/lib/api'
 
 export async function signIn({ email, password }) {
   console.log('sigin in', import.meta.env.VITE_PUBLIC_API_URL)
-  return await appApi.post('/auth/password/signin', { email, password })
+  return await appApi.post('/auth/login', { email, password })
 }
 
 export async function signUp({ email, password }) {
-  return await appApi.post('/auth/password/signup', { email, password })
+  return await appApi.post('/auth/signup', { email, password })
 }
 
 export async function resetPassword(email) {

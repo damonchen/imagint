@@ -45,7 +45,7 @@ authApi.interceptors.request.use(
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
     } else {
-      window.location.href = '/auth/sign-in'
+      window.location.href = '/#/auth/sign-in'
     }
 
     config.headers['Content-Type'] = 'application/json'
@@ -67,7 +67,7 @@ authApi.interceptors.response.use(
     const { response } = error
     const { status } = response
     if (status === 401) {
-      window.location.href = '/auth/sign-in'
+      window.location.href = '/#/auth/sign-in'
     }
 
     return Promise.reject(error)

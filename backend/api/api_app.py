@@ -16,7 +16,7 @@ from api.config import Config
 from api.extensions import (
     database,
     redis,
-    celery,
+    # celery,
     mail,
     login,
     sentry,
@@ -89,7 +89,7 @@ def initialize_extension(app):
     extensions_to_init = [
         ("database", database),
         ("redis", redis),
-        ("celery", celery),
+        # ("celery", celery),
         ("login", login),
         ("mail", mail),
         ("sentry", sentry),

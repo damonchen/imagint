@@ -25,11 +25,11 @@ export default function AppShell() {
   const isDebug = process.env.NODE_ENV === 'development';
 
   return (
-    token || isDebug ? <SelfAccountProvider>
+    token || isDebug ? <div>
       <div className='relative h-full overflow-hidden bg-background'>
         <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
         <MainContent isCollapsed={isCollapsed} />
       </div>
-    </SelfAccountProvider > : <>xxxxxxxxxxxx</>
+    </div > : <>xxxxxxxxxxxx</>
   )
 }

@@ -3,6 +3,8 @@ import json
 from flask_restful import marshal_with, reqparse
 
 from api.services.redis_service import RedisService
+
+from api.services.account_service import AccountService
 from .errors import NotFoundError
 from api.data.fields.task_fields import (
     task_fields,
@@ -11,6 +13,7 @@ from api.data.fields.task_fields import (
 )
 from api.services.task_service import TaskService
 from api.services.chat_service import ChatMessageImageService
+from api.services.repository.task_repository import TaskRepository
 from . import api
 from .wraps import WebApiResource, TaskApiResource
 
@@ -65,22 +68,30 @@ class TaskResource(TaskApiResource):
         task_type = args.task_type
         media_type = args.media_type
 
+        key = f"task:{task_type}:{media_type}"
+        logger.info("task type key %s", key)
+
         # get task from redis
-        task_id = RedisService.lpop(f"task:{task_type}:{media_type}")
-        if not task_id:
+        item = RedisService.lpop(key)
+        if not item:
             # no task
             return {"task_id": None}
+
+        item = json.loads(item)
+        task_id = item["task_id"]
+        logger.info("task id is %s", task_id)
 
         task = TaskService.get_task(task_id)
         if task is None:
             logger.info(f"task {task_id} not found ")
             return {"task_id": None}
 
-        account = task.account
-        TaskService.update_task_status(account, task, status="running")
+        account = AccountService.load_account(task.account_id)
+
+        TaskService.update_task_status(account, task.task_id, status="running")
 
         if task:
-            payload = json.loads(task.payload)
+            payload = task.payload
             return {
                 "task_id": task_id,
                 "prompt": payload["prompt"],
@@ -104,14 +115,15 @@ class TaskCompleteResource(TaskApiResource):
         status = args.status
         result = args.result
 
-        task = TaskService.load_task_by_task_id(task_id)
+        logger.info("task %s complete %s", task_id, result)
+
+        task = TaskRepository.load_task_by_task_id(task_id)
         if task is None:
             logger.info(f"task not valid {task_id}")
             return json.dumps({"task_id": None})
 
-        account = task.account
-
-        payload = json.loads(task.payload)
+        account = AccountService.load_account(task.account_id)
+        payload = task.payload
 
         media_type = result.get("media_type")
         if media_type == "image":
@@ -120,7 +132,7 @@ class TaskCompleteResource(TaskApiResource):
 
             ChatMessageImageService.create_images(account, message_id, images)
 
-        task = TaskService.update_task_status(task_id, status, result)
+        task = TaskService.update_task_status(account, task_id, status, result)
         return task
 
 

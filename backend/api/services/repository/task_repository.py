@@ -14,6 +14,7 @@ class TaskRepository(object):
             account_id=account.id,
             task_id=task_id,
             payload=payload,
+            result={},
             status=status,
             created_by=account.id,
             updated_by=account.id,
@@ -67,7 +68,7 @@ class TaskRepository(object):
 
 class TaskWebTokenRepository(object):
     @staticmethod
-    def create_task_web_token(task_id, token):
+    def create_task_web_token(token):
         """Create a new task web token"""
         task_web_token = TaskWebToken(
             token=token,

@@ -11,18 +11,21 @@ const SelfAccountProvider = ({ children }) => {
   const { data } = useQuery({
     queryKey: ['selfAccount'],
     queryFn: getSelf,
+    refetchOnWindowFocus: false,
   })
 
-  useEffect(() => {
-    console.log('refresh self account', refresh)
-    queryClient.invalidateQueries(['selfAccount'])
-  }, [refresh, queryClient])
+  // useEffect(() => {
+  //   console.log('refresh self account', refresh)
+  //   queryClient.invalidateQueries({ queryKey: ['selfAccount'] })
+  // }, [refresh, queryClient])
 
   const value = useMemo(() => {
     return {
       account: data ?? {},
       forceRefresh: () => {
-        setRefresh((prev) => !prev)
+        if (data) {
+          setRefresh((prev) => !prev)
+        }
       },
     }
   }, [data])

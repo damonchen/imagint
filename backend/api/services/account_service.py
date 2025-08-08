@@ -1,3 +1,4 @@
+import json
 import logging
 import uuid
 from typing import Optional
@@ -9,12 +10,12 @@ from api.services.repository.account_repository import (
     AccountRepository,
     AccountPasswordTokenRepository,
 )
-from api.services.celery_service import CeleryService
 from api.extensions.database import db
 from api.extensions.mail import mail
 from flask import render_template
 from api.extensions.login import token_coder
 from api.extensions.database import transaction
+from api.services.redis_service import RedisService
 
 
 class AccountService(object):
@@ -43,7 +44,7 @@ class AccountService(object):
     @staticmethod
     @transaction
     def register(
-        email: str, username: str, password: str, invited_by: str = None
+            email: str, username: str, password: str, invited_by: str = None
     ) -> dict:
         """
         Register new account
@@ -79,19 +80,16 @@ class AccountService(object):
             account,
             type="register",
             expires_at=datetime.datetime.now(datetime.UTC)
-            + datetime.timedelta(hours=1),
+                       + datetime.timedelta(hours=1),
         )
 
-        CeleryService.send_task(
-            "send_register_token_mail",
-            args=(
-                {
-                    "id": account.id,
-                    "email": account.email,
-                },
-                mail_validate_token.token,
-            ),
-        )
+        RedisService.rpush("mail:account:register", json.dumps(
+            {
+                "id": account.id,
+                "email": account.email,
+                "token": mail_validate_token.token,
+            },
+        ))
 
         return account
 
@@ -204,7 +202,7 @@ class AccountService(object):
     @staticmethod
     @transaction
     def change_password(
-        account_id: int | Account, username: str, new_password: str
+            account_id: int | Account, username: str, new_password: str
     ) -> Account:
         """
         Change account password
