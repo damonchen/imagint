@@ -52,13 +52,16 @@ class TaskRepository(object):
         return query.all(), query.count()
 
     @staticmethod
-    def update_task(task, account, status, result=None):
+    def update_task(task, account, status, result=None, done_at=None):
         """Update task status and result"""
         task.status = status
         task.updated_by = account.id
 
         if result is not None:
             task.result = result
+
+        if done_at is not None:
+            task.done_at = done_at
 
         db.session.add(task)
         db.session.flush()

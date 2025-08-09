@@ -56,16 +56,17 @@ class ChatService(object):
 class ChatMessageService(object):
     @staticmethod
     def create_messages(
-        account: Account, chat_id: str, prompt: str, params: dict
+            account: Account, chat_id: str, prompt: str, params: dict
     ) -> ChatMessage:
         message = ChatMessageRepository.create_message(account, chat_id, prompt, params)
 
-        model = params.get("model", "qwen-image")
+        model = params.pop("model", "qwen-image")
+        type = params.pop("type")
 
         # create a task to save the chat message task
         payload = {
             "model": model,
-            "task_type": model,
+            "type": type,
             "chat_id": chat_id,
             "message_id": message.id,
             "prompt": prompt,
@@ -87,7 +88,7 @@ class ChatMessageService(object):
 
     @staticmethod
     def get_chat_messages(
-        account: Account, chat_id: str, page: int, page_size: int
+            account: Account, chat_id: str, page: int, page_size: int
     ) -> Pagination:
         return ChatMessageRepository.get_chat_messages(
             account, chat_id, page, page_size
@@ -95,7 +96,7 @@ class ChatMessageService(object):
 
     @staticmethod
     def get_chat_message(
-        account: Account, chat_id: str, message_id: str
+            account: Account, chat_id: str, message_id: str
     ) -> ChatMessage:
         return ChatMessageRepository.get_chat_message(account, chat_id, message_id)
 

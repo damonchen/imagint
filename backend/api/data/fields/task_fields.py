@@ -46,4 +46,6 @@ dispatch_task_fields = {
     "task_id": fields.String(attribute="task_id"),
     "prompt": fields.String(attribute="prompt"),
     "params": fields.Raw(attribute="params"),
+    "model": fields.String(),
+    "type": fields.String(),
 }

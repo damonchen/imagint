@@ -2,9 +2,8 @@
 import json
 import sys
 import os
-import requests
-import uuid
 import random
+import uuid
 from typing import Dict, Any
 
 import modal
@@ -14,6 +13,8 @@ image = (
     .apt_install("git", "gcc")
     .pip_install(
         "git+https://github.com/huggingface/diffusers",
+        "protobuf",
+        "transformers[sentencepiece]",
         "torch",
         "torchvision",
         "accelerate",
@@ -23,23 +24,29 @@ image = (
     # .run_commands("git clone https://github.com/modal-labs/agi && echo 'ready to go!'")
 )
 
-app = modal.App("app-qwen-image", image=image)
+app = modal.App(image=image)
 
 
 with image.imports():
-    import diffusers
+    from diffusers import DiffusionPipeline
     import torch
 
 CACHE_DIR = "/cache"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
 
-@app.cls(image=image, gpu="H200", volumes={CACHE_DIR: cache_vol}, timeout=600)
+@app.cls(
+    image=image,
+    gpu="H200",
+    volumes={CACHE_DIR: cache_vol},
+    secrets=[modal.Secret.from_name("huggingface-secret")],
+    timeout=600,
+)
 class Inference(object):
     @modal.enter()
     def initialize(self):
         # 模型配置
-        model_name = "Qwen/Qwen-Image"
+        model_name = "black-forest-labs/FLUX.1-dev"
         # 设备配置
         if torch.cuda.is_available():
             self.torch_dtype = torch.bfloat16
@@ -48,10 +55,10 @@ class Inference(object):
             self.torch_dtype = torch.float32
             self.device = "cpu"
 
-        self.pipe = diffusers.DiffusionPipeline.from_pretrained(
+        self.pipe = DiffusionPipeline.from_pretrained(
             model_name,
-            cache_dir=CACHE_DIR,
             torch_dtype=self.torch_dtype,
+            # use_auth_token=os.environ["HF_TOKEN"],
         )
 
     @modal.enter()
@@ -61,7 +68,7 @@ class Inference(object):
     @modal.method()
     def run(
         self, prompt: str, ratio: str = "16:9", batch_size: int = 4, seed: int = None
-    ) -> list[bytes]:
+    ):
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
 
         # 支持多种宽高比
@@ -80,58 +87,53 @@ class Inference(object):
             num_images_per_prompt=batch_size,
             width=width,
             height=height,
+            guidance_scale=3.5,
             num_inference_steps=50,
-            true_cfg_scale=4.0,
+            max_sequence_length=512,
             generator=torch.Generator(device=self.device).manual_seed(seed),
         ).images
 
         return images
 
 
-@app.function()
-async def run(prompt, ratio, batch_size, seed):
-    images = Inference().run.remote(prompt, ratio, batch_size, seed)
-    return images
+# @app.local_entrypoint()
+# def main():
+#     from PIL import Image
+
+#     input_data = json.load(sys.stdin)
+#     prompt = input_data.get("prompt", "")
+#     params = input_data.get("params", {})
+
+#     image = params.get("image", "")
+
+#     im = Image.open(image)
+
+#     image = Inference().run.remote(im, prompt)
+#     filename = str(uuid.uuid4()) + ".png"
+#     image.save(filename)
+
+#     sys.stdout.write(json.dumps({"images": [filename]}))
+#     sys.stdout.flush()
 
 
-def main():
-    # 执行任务
-    data = sys.stdin.read().strip()
-    data = json.loads(data)
-    with open("/tmp/modal.txt", "w") as fp:
-        fp.write(json.dumps(data, indent=4, ensure_ascii=False))
+@app.local_entrypoint()
+def main(prompt, ratio="16:9", batch_size=4, seed=None):
+    # ratio = "16:9"
+    # batch_size = 4
+    # seed = None
+    # prompt = "A cat holding a sign that says hello world"
 
-    prompt, ratio, batch_size, seed = (
-        data["prompt"],
-        data["ratio"],
-        data["batch_size"],
-        data["seed"],
-    )
-    with app.run():
-        images = Inference().run.remote(prompt, ratio, batch_size, seed)
-        print("------------------------------")
-        file_paths = []
-        prefix = str(uuid.uuid4())[:4]
-        for i, image in enumerate(images):
-            v = str(uuid.uuid4())
-            output_path = f"/tmp/{prefix}_{i}_{v}.png"
-            image.save(output_path)
-            file_paths.append(output_path)
+    images = Inference().run.remote(prompt, ratio, batch_size=batch_size, seed=seed)
 
-        print(json.dumps({"images": file_paths}))
-        # images = run(data["prompt"], data["ratio"], data["batch_size"], data["seed"])
+    file_paths = []
+    prefix = str(uuid.uuid4())[:4]
+    # output_dir = '.'
+    for i, image in enumerate(images):
+        v = str(uuid.uuid4())
+        output_path = f"images/{prefix}_{i}_{v}.png"
+        image.save(output_path)
+        # output_path.write_bytes(image_bytes)
 
+        file_paths.append(output_path)
 
-if __name__ == "__main__":
-    main()
-
-    # # 保存图片并收集文件路径
-    # file_paths = []
-    # prefix = str(uuid.uuid4())[:4]
-    # for i, image in enumerate(images):
-    #     v = str(uuid.uuid4())
-    #     output_path = f"images/{prefix}_{i}_{v}.png"
-    #     image.save(output_path)
-    #     file_paths.append(output_path)
-
-    # print(json.dumps({"images": file_paths}))
+    print(json.dumps(file_paths))
