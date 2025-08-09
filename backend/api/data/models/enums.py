@@ -62,6 +62,7 @@ class TaskStatus(StrEnum):
     SUCCESS = "success"
     FAILED = "failed"
     RUNNING = "running"
+    TIMEOUT = "timeout"
 
 
 class TaskWebTokenStatus(StrEnum):

@@ -53,7 +53,7 @@ class TaskService(object):
         if not task:
             raise NotFoundError("Task not found")
 
-        if status in [TaskStatus.SUCCESS.value, TaskStatus.FAILED.value]:
+        if status in [TaskStatus.SUCCESS.value, TaskStatus.FAILED.value, TaskStatus.TIMEOUT.value]:
             return TaskRepository.update_task(
                 task=task,
                 account=account,
