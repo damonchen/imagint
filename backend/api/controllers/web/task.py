@@ -96,6 +96,8 @@ class TaskResource(TaskApiResource):
                 "task_id": task_id,
                 "prompt": payload["prompt"],
                 "params": payload["params"],
+                "model": payload.get("model"),
+                "type": payload.get("type"),
             }
         else:
             return {"task_id": None}
@@ -115,7 +117,7 @@ class TaskCompleteResource(TaskApiResource):
         status = args.status
         result = args.result
 
-        logger.info("task %s complete %s", task_id, result)
+        logger.info("task %s complete %s %s", task_id, status, result)
 
         task = TaskRepository.load_task_by_task_id(task_id)
         if task is None:
