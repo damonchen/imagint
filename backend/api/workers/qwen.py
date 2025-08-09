@@ -33,6 +33,8 @@ with image.imports():
 CACHE_DIR = "/cache"
 cache_vol = modal.Volume.from_name("hf-hub-cache", create_if_missing=True)
 
+TEMP_PATH = "/tmp"
+
 
 @app.cls(image=image, gpu="H200", volumes={CACHE_DIR: cache_vol}, timeout=600)
 class Inference(object):
@@ -98,7 +100,7 @@ def main():
     # 执行任务
     data = sys.stdin.read().strip()
     data = json.loads(data)
-    with open("/tmp/modal.txt", "w") as fp:
+    with open(os.path.join(TEMP_PATH, "modal.txt"), "w") as fp:
         fp.write(json.dumps(data, indent=4, ensure_ascii=False))
 
     prompt, ratio, batch_size, seed = (
@@ -110,28 +112,16 @@ def main():
     with app.run():
         images = Inference().run.remote(prompt, ratio, batch_size, seed)
         print("------------------------------")
+
         file_paths = []
-        prefix = str(uuid.uuid4())[:4]
         for i, image in enumerate(images):
-            v = str(uuid.uuid4())
-            output_path = f"/tmp/{prefix}_{i}_{v}.png"
+            uuid = str(uuid.uuid4())
+            output_path = os.path.join(TEMP_PATH, f"{uuid}.png")
             image.save(output_path)
             file_paths.append(output_path)
 
         print(json.dumps({"images": file_paths}))
-        # images = run(data["prompt"], data["ratio"], data["batch_size"], data["seed"])
 
 
 if __name__ == "__main__":
     main()
-
-    # # 保存图片并收集文件路径
-    # file_paths = []
-    # prefix = str(uuid.uuid4())[:4]
-    # for i, image in enumerate(images):
-    #     v = str(uuid.uuid4())
-    #     output_path = f"images/{prefix}_{i}_{v}.png"
-    #     image.save(output_path)
-    #     file_paths.append(output_path)
-
-    # print(json.dumps({"images": file_paths}))
