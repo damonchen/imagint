@@ -135,9 +135,11 @@ class ChatMessageResource(WebApiResource):
         prompt = args.prompt
         params = args.params if args.params else {}
 
-        print('current params', params)
+        print("current params", params)
 
-        ims = ChatMessageService.create_messages(account, chat_id, message_id, prompt, params)
+        ims = ChatMessageService.create_messages(
+            account, chat_id, message_id, prompt, params
+        )
         return ims
 
 

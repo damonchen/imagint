@@ -1,61 +1,52 @@
 import logging
-from collections.abc import Callable
-from typing import Optional
-from enum import Enum
 from functools import wraps
 
-from pydantic import BaseModel
-from flask import g, request, make_response, session, redirect
-from werkzeug.exceptions import Unauthorized
-
+from flask import request, g, make_response, session, redirect
+from flask_restful import Resource
+from werkzeug.exceptions import NotFound, Unauthorized
+from api.extensions.login import token_coder
 from api.extensions.database import db
-from api.data.models.model import ApiToken
+from api.data.models.account import Account
+from api.services.task_service import TaskWorkerService
 
 
-class UserLocation(Enum):
-    QUERY = "query"
-    JSON = "json"
-    FORM = "form"
+def validate_api_token(func):
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        account = decode_jwt_token()
+        return func(account, *args, **kwargs)
+
+    return wrapper
 
 
-class FetchUser(BaseModel):
-    fetch_from: UserLocation
-    required: bool = False
+def validate_task_token(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        task_web_token = decode_task_token()
+        g.task_web_token = task_web_token
+
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
-def validate_app_token(
-    view: Optional[Callable] = None, *, fetch_user: Optional[FetchUser] = None
-):
-    def decorator(view_func):
-        @wraps(view_func)
-        def wrapped_view(*args, **kwargs):
-            api_token = validate_and_get_api_token("app")
-            kwargs["api_token"] = api_token
+def decode_task_token():
+    api_key = request.headers.get("X-API-KEY")
+    if api_key is None:
+        raise Unauthorized("X-API-KEY header must be provided")
 
-            if fetch_user_args := fetch_user:
-                if fetch_user_args.required:
-                    if fetch_user_args.fetch_from == UserLocation.QUERY:
-                        user_id = request.args.get("user")
-                    elif fetch_user_args.fetch_from == UserLocation.JSON:
-                        user_id = request.get_json().get("user")
-                    elif fetch_user_args.fetch_from == UserLocation.FORM:
-                        user_id = request.form.get("user")
-                    else:
-                        user_id = None
+    task_web_token = TaskWorkerService.get_task_token(api_key)
+    if task_web_token is None:
+        raise Unauthorized("Invalid API key")
 
-                    if not user_id and fetch_user_args.required:
-                        raise ValueError("user id is required")
+    if task_web_token.is_not_active:
+        raise Unauthorized("Invalid API key")
 
-                    kwargs["user_id"] = user_id
-
-            return view_func(*args, **kwargs)
-
-        return wrapped_view
-
-    return decorator
+    return task_web_token
 
 
-def validate_and_get_api_token(scope=None):
+def decode_jwt_token():
     auth_header = request.headers.get("Authorization")
     if auth_header is None or " " not in auth_header:
         raise Unauthorized(
@@ -66,15 +57,20 @@ def validate_and_get_api_token(scope=None):
     if auth_scheme.lower() != "bearer":
         raise Unauthorized("Invalid authorization scheme")
 
-    api_token = (
-        db.session.query(ApiToken)
-        .filter(
-            ApiToken.token == auth_token,
-            ApiToken.type == scope,
-        )
-        .first()
-    )
-    if api_token is None:
-        raise Unauthorized("Invalid token")
+    payload = token_coder.decode(auth_token)
+    account_id = payload["account_id"]
 
-    return api_token
+    account = db.session.query(Account).filter(Account.id == account_id).first()
+    if account is None:
+        raise NotFound()
+
+    g.account = account
+    return account
+
+
+class WebApiResource(Resource):
+    method_decorators = [validate_api_token]
+
+
+class TaskApiResource(Resource):
+    method_decorators = [validate_task_token]

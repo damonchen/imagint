@@ -57,7 +57,7 @@ class ChatMessageRepository(object):
 
     @staticmethod
     def create_message(
-        account: Account, chat_id: str, prompt: str, params: str
+            account: Account, chat_id: str, prompt: str, params: str
     ) -> ChatMessage:
         message = ChatMessage(
             account_id=account.id,
@@ -80,7 +80,7 @@ class ChatMessageRepository(object):
 
     @staticmethod
     def get_chat_message(
-        account: Account, chat_id: str, message_id: str
+            account: Account, chat_id: str, message_id: str
     ) -> ChatMessage:
         return ChatMessage.query.filter_by(
             account_id=account.id, chat_id=chat_id, id=message_id
@@ -88,10 +88,10 @@ class ChatMessageRepository(object):
 
     @staticmethod
     def update_message_translation(
-        account: Account,
-        message_id: str,
-        translated_text: str,
-        translated_image_path: str,
+            account: Account,
+            message_id: str,
+            translated_text: str,
+            translated_image_path: str,
     ) -> Optional[ChatMessage]:
         message = ChatMessage.query.filter_by(account_id=account.id).get(message_id)
         if message:
@@ -142,3 +142,8 @@ class ChatMessageImageRepository(object):
             .filter(ChatMessageImage.chat_message_id == message.id)
             .all()
         )
+
+    @staticmethod
+    def get_image(image_id: int):
+        image = db.session.query(ChatMessageImage).get(image_id)
+        return image
