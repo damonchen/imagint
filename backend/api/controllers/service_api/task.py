@@ -5,7 +5,6 @@ from flask_restful import marshal_with, reqparse
 from api.services.redis_service import RedisService
 
 from api.services.account_service import AccountService
-from .errors import NotFoundError
 from api.data.fields.task_fields import (
     task_fields,
     task_pagination_fields,

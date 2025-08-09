@@ -12,17 +12,26 @@ page_chat_fields = {
     "items": fields.List(fields.Nested(chat_fields)),
     "total": fields.Integer(attribute="total"),
     "page": fields.Integer(attribute="page"),
-    "page_size": fields.Integer(attribute="page_size"),
+    "pageSize": fields.Integer(attribute="page_size"),
 }
 
+chat_message_image_fields = {
+    "id": fields.String(attribute="id"),
+    "chatMessageId": fields.String(attribute="chat_message_id"),
+    "imagePath": fields.String(attribute="image_path"),
+}
 
 chat_message_fields = {
     "id": fields.String(attribute="id"),
-    "chat_id": fields.String(attribute="chat_id"),
-    "image_path_ids": fields.String(attribute="image_path_ids"),
-    "translated_image_path_ids": fields.String(attribute="translated_image_path_ids"),
-    "translated_text": fields.String(attribute="translated_text"),
-    "created_at": TimestampField(attribute="created_at"),
+    "chatId": fields.String(attribute="chat_id"),
+    "type": fields.String(attribute="type"),
+    "prompt": fields.String(attribute="prompt"),
+    "params": fields.Raw(attribute="params"),
+    "status": fields.String(attribute="status"),
+    "imagePath": fields.String(attribute="image_path"),
+    "imageCount": fields.Integer(attribute="image_count"),
+    "images": fields.List(fields.Nested(chat_message_image_fields)),
+    "createdAt": TimestampField(attribute="created_at"),
 }
 
 
@@ -30,5 +39,5 @@ page_chat_message_fields = {
     "items": fields.List(fields.Nested(chat_message_fields)),
     "total": fields.Integer(attribute="total"),
     "page": fields.Integer(attribute="page"),
-    "page_size": fields.Integer(attribute="page_size"),
+    "pageSize": fields.Integer(attribute="page_size"),
 }

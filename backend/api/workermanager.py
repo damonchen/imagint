@@ -195,6 +195,9 @@ class Text2ImageWorker(object):
                 "message": f"Failed to run subprocess: {str(e)}",
             }
             # raise
+        
+        if stderr_output:
+            print(stderr_output.strip())
 
         file_paths = []
         if stdout_output:
@@ -214,9 +217,6 @@ class Text2ImageWorker(object):
             #     images = stdout_output.split("images: ")[1].strip()
             #     images = json.loads(images)
             #     file_paths.extend(images)
-
-        if stderr_output:
-            print(stderr_output.strip())
 
         return {
             "status": "success",
@@ -326,6 +326,9 @@ class Image2ImageWorker(object):
             }
             # raise
 
+        if stderr_output:
+            print(stderr_output.strip())
+
         file_paths = []
         if stdout_output:
             print(stdout_output.strip())
@@ -340,9 +343,6 @@ class Image2ImageWorker(object):
                 images = stdout_output.split("images: ")[1].strip()
                 images = json.loads(images)
                 file_paths.extend(images)
-
-        if stderr_output:
-            print(stderr_output.strip())
 
         return {
             "status": "success",
@@ -446,6 +446,9 @@ class Image2VideoWorker(object):
                 "message": f"Failed to run subprocess: {str(e)}",
             }
 
+        if stderr_output:
+            print(stderr_output.strip())
+
         file_paths = []
         if stdout_output:
             print(stdout_output.strip())
@@ -460,9 +463,6 @@ class Image2VideoWorker(object):
                 videos = stdout_output.split("videos: ")[1].strip()
                 videos = json.loads(videos)
                 file_paths.extend(videos)
-
-        if stderr_output:
-            print(stderr_output.strip())
 
         return {
             "status": "success",
