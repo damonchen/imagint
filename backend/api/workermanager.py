@@ -6,6 +6,8 @@ import subprocess
 import os
 import json
 import uuid
+import traceback
+import shutil
 
 TASK_TYPE = "qwen-image"  # 指定任务类型
 API_BASE_URL = "http://localhost:5050"  # 根据实际服务器地址调整
@@ -202,7 +204,7 @@ class Text2ImageWorker(object):
             prefix = "------------------------------"
             start = stdout_output.find(prefix)
             if start != -1:
-                stdout_output = stdout_output[start + len(prefix) :].strip()
+                stdout_output = stdout_output[start + len(prefix):].strip()
 
             info = json.loads(stdout_output)
             file_paths = info["images"]
@@ -331,7 +333,7 @@ class Image2ImageWorker(object):
             # 从stdout的------之后提取
             prefix = "------------------------------"
             start = stdout_output.index(prefix)
-            stdout_output = stdout_output[start + len(prefix) :].strip()
+            stdout_output = stdout_output[start + len(prefix):].strip()
 
             if "images" in stdout_output:
                 # 提取图片路径
@@ -451,7 +453,7 @@ class Image2VideoWorker(object):
             # 从stdout的------之后提取
             prefix = "------------------------------"
             start = stdout_output.index(prefix)
-            stdout_output = stdout_output[start + len(prefix) :].strip()
+            stdout_output = stdout_output[start + len(prefix):].strip()
 
             if "videos" in stdout_output:
                 # 提取图片路径
@@ -531,10 +533,17 @@ def process_task(task_id, type, task_data):
     cls = type_cls[type]
     instance = cls(task_id, task_data)
 
+    start = time.time()
     resp = instance.run()
+    end = time.time()
+
+    elapsed = end - start
+    print(f"task id response {resp}, elapsed {elapsed}")
+
+    resp["elapsed"] = elapsed  # 添加处理时间
 
     # 需要将图像或者视频，转移到目标目录下
-    if resp["media_type"] == "image":
+    if resp.get("media_type") == "image":
         for image_path in resp["images"]:
             # 存储路径格式要求如下，IMAGE_PATH下面有2个字母构建的目录，然后再将文件放到此目录下
             # 例如：/mnt/f/dev/Imagint/src/backend/images/ab/1234567890.png
@@ -542,7 +551,7 @@ def process_task(task_id, type, task_data):
             # 需要将image_path的文件移动到此目录下
             move_image(image_path)
 
-    elif resp["media_type"] == "video":
+    elif resp.get("media_type") == "video":
         for video_path in resp["videos"]:
             move_video(video_path)
 
@@ -551,7 +560,6 @@ def process_task(task_id, type, task_data):
     )
 
     status = resp.pop("status", None)  # 移除status字段
-
     upload_task_result(task_id, status, resp)
 
 
@@ -627,7 +635,7 @@ def consume():
             time.sleep(1)
 
         except Exception as e:
-            print(f"Error occurred: {str(e)}")
+            print(f"Error occurred: {str(e)}", traceback.format_exc())
             time.sleep(1)
             continue
 
