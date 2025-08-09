@@ -262,7 +262,7 @@ def register_blueprint(app, url_prefix="/api/v1"):
     from .controllers.web import bp as web_bp
 
     app.register_blueprint(service_api_bp, url_prefix=url_prefix)
-    app.register_blueprint(web_bp, url_prefix=url_prefix)
+    app.register_blueprint(web_bp, url_prefix="/")
 
 
 # def register_scheduler(app):

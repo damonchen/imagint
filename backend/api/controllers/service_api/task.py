@@ -132,7 +132,8 @@ class TaskCompleteResource(TaskApiResource):
             images = result.get("images")
             message_id = payload.get("message_id")
 
-            ChatMessageImageService.create_images(account, message_id, images)
+            images = ChatMessageImageService.create_images(account, message_id, images)
+            RedisService.
 
         task = TaskService.update_task_status(account, task_id, status, result)
         return task

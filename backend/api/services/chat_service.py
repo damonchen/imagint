@@ -122,3 +122,7 @@ class ChatMessageImageService(object):
     @staticmethod
     def get_images(account, message_id):
         return ChatMessageImageRepository.get_message_images(account, message_id)
+
+    @staticmethod
+    def get_image(image_id):
+        return ChatMessageImageRepository.get_image(image_id)
