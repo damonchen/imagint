@@ -13,6 +13,9 @@ API_KEY = "1234567890"
 MODAL_PATH = "/mnt/f/dev/Imagint/src/backend/.venv/bin/python"
 TEMP_PATH = "/tmp"
 
+IMAGE_PATH = "/mnt/f/dev/Imagint/src/backend/images"
+VIDEO_PATH = "/mnt/f/dev/Imagint/src/backend/videos"
+
 logger = logging.getLogger(__name__)
 
 import sqlite3
@@ -199,7 +202,7 @@ class Text2ImageWorker(object):
             prefix = "------------------------------"
             start = stdout_output.find(prefix)
             if start != -1:
-                stdout_output = stdout_output[start + len(prefix):].strip()
+                stdout_output = stdout_output[start + len(prefix) :].strip()
 
             info = json.loads(stdout_output)
             file_paths = info["images"]
@@ -328,7 +331,7 @@ class Image2ImageWorker(object):
             # 从stdout的------之后提取
             prefix = "------------------------------"
             start = stdout_output.index(prefix)
-            stdout_output = stdout_output[start + len(prefix):].strip()
+            stdout_output = stdout_output[start + len(prefix) :].strip()
 
             if "images" in stdout_output:
                 # 提取图片路径
@@ -448,7 +451,7 @@ class Image2VideoWorker(object):
             # 从stdout的------之后提取
             prefix = "------------------------------"
             start = stdout_output.index(prefix)
-            stdout_output = stdout_output[start + len(prefix):].strip()
+            stdout_output = stdout_output[start + len(prefix) :].strip()
 
             if "videos" in stdout_output:
                 # 提取图片路径
@@ -483,6 +486,41 @@ def upload_task_result(task_id, status, result):
     )
 
 
+def prepare_image_path(file_id):
+    file_id = os.path.basename(file_id)
+    prefix = file_id[:2]
+    os.makedirs(os.path.join(IMAGE_PATH, prefix), exist_ok=True)
+    # change to webp file???
+    return os.path.join(IMAGE_PATH, prefix, f"{file_id}.png")
+
+
+def move_image(image_path):
+    prepare_image_path(image_path)
+    shutil.move(image_path, prepare_image_path(image_path))
+
+
+def move_images(images):
+    for image_path in images:
+        move_image(image_path)
+
+
+def prepare_video_path(file_id):
+    file_id = os.path.basename(file_id)
+    prefix = file_id[:2]
+    os.makedirs(os.path.join(VIDEO_PATH, prefix), exist_ok=True)
+    return os.path.join(VIDEO_PATH, prefix, f"{file_id}.mp4")
+
+
+def move_video(video_path):
+    prepare_video_path(video_path)
+    shutil.move(video_path, prepare_video_path(video_path))
+
+
+def move_videos(videos):
+    for video_path in videos:
+        move_video(video_path)
+
+
 def process_task(task_id, type, task_data):
     type_cls = {
         "text2image": Text2ImageWorker,
@@ -494,6 +532,19 @@ def process_task(task_id, type, task_data):
     instance = cls(task_id, task_data)
 
     resp = instance.run()
+
+    # 需要将图像或者视频，转移到目标目录下
+    if resp["media_type"] == "image":
+        for image_path in resp["images"]:
+            # 存储路径格式要求如下，IMAGE_PATH下面有2个字母构建的目录，然后再将文件放到此目录下
+            # 例如：/mnt/f/dev/Imagint/src/backend/images/ab/1234567890.png
+            # 其中ab是2个字母构建的目录，1234567890.png是文件名
+            # 需要将image_path的文件移动到此目录下
+            move_image(image_path)
+
+    elif resp["media_type"] == "video":
+        for video_path in resp["videos"]:
+            move_video(video_path)
 
     task_db.update_task_status(
         task_id, TaskStatus.PROCESSED, json.dumps(resp, ensure_ascii=False)

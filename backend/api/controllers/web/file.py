@@ -28,7 +28,7 @@ class BaseFileResource(Resource):
             abort(403, "URL already used")
         RedisService.set(f"used:{file_token}", 1, 3600)  # 防重用，1小时保留记录
 
-        aes_key = current_app.config.get('AES_KEY')
+        aes_key = current_app.config.get("AES_KEY")
 
         try:
             aad = b"file-service"
@@ -51,4 +51,34 @@ class ImageResource(BaseFileResource):
         return send_file(image.image_path, as_attachment=True)
 
 
+# 可能也得有一个文件上传的token限制处理，防止恶意上传
+class FileUploadResource(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument("file", type=FileStorage, location="files")
+        parser.add_argument("media_type", type=str, location="args")
+        args = parser.parse_args()
+        file = args.file
+        media_type = args.media_type
+
+        if not file:
+            abort(400, "No file uploaded")
+
+        file_id = str(uuid.uuid4())
+        if media_type == "image":
+            image_path = os.path.join(
+                current_app.config.get("IMAGE_PATH"), file_id[:2], f"{file_id}.png"
+            )
+            file.save(image_path)
+        elif media_type == "video":
+            video_path = os.path.join(
+                current_app.config.get("VIDEO_PATH"), file_id[:2], f"{file_id}.mp4"
+            )
+            file.save(video_path)
+
+        return {"file_id": file_id}
+
+
 api.add_resource(ImageResource, "/image/<file_token>")
+
+api.add_resource(FileUploadResource, "/file/upload")
