@@ -1,4 +1,5 @@
 import os
+import uuid
 from flask import request, abort, current_app, send_file
 from flask_restful import Resource, reqparse
 
@@ -6,6 +7,7 @@ from api.services.chat_service import ChatMessageImageService
 from api.libs.sign_url import verify_signature, decrypt_token
 from api.service.redis_service import RedisService
 from . import api
+from ..common.errors import NoFileUploadedError, TooManayFilesError
 
 
 class BaseFileResource(Resource):
@@ -55,12 +57,18 @@ class ImageResource(BaseFileResource):
 class FileUploadResource(Resource):
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument("file", type=FileStorage, location="files")
         parser.add_argument("media_type", type=str, location="args")
         args = parser.parse_args()
-        file = args.file
         media_type = args.media_type
 
+        if "files" not in request.files:
+            raise NoFileUploadedError
+
+        if len(request.files) > 1:
+            raise TooManayFilesError()
+
+        files = request.files["files"]
+        file = files[0]
         if not file:
             abort(400, "No file uploaded")
 

@@ -115,8 +115,8 @@ def main():
 
         file_paths = []
         for i, image in enumerate(images):
-            uuid = str(uuid.uuid4())
-            output_path = os.path.join(TEMP_PATH, f"{uuid}.png")
+            filename = str(uuid.uuid4())
+            output_path = os.path.join(TEMP_PATH, f"{filename}.png")
             image.save(output_path)
             file_paths.append(output_path)
 

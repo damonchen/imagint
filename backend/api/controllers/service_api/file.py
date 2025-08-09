@@ -1,21 +1,15 @@
 import logging
 import os
-from datetime import datetime
-from typing import Optional
 from flask import request, current_app, send_file, abort
-from flask_restful import Resource, marshal_with, reqparse
-from werkzeug.utils import secure_filename
-from werkzeug.exceptions import BadRequest, NotFound
 from flask_restful import marshal_with
 from werkzeug.datastructures.file_storage import FileStorage
 
 from . import api
-from .errors import (
+from api.controllers.common.errors import (
     FileTooLargeError,
     NoFileUploadedError,
     TooManayFilesError,
     UnsupportedFileTypeError,
-    NoContainerError,
 )
 from .wraps import WebApiResource
 
@@ -62,7 +56,7 @@ class FileApi(WebApiResource):
             raise TooManayFilesError()
 
         files = request.files["files"]
-        temp_folder = app.config.get("UPLOAD_TEMP_FOLDER", "/tmp")
+        temp_folder = current_app.config.get("UPLOAD_TEMP_FOLDER", "/tmp")
 
         print("files info is ", files)
 

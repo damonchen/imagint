@@ -79,6 +79,8 @@ DEFAULTS = {
     "RABBITMQ_EXCHANGE": "imgint.exchange",
     "RABBITMQ_ROUTING_KEY": "all",
     "RABBITMQ_QUEUE": "imgint.queue",
+    "AES_KEY": "1c6a542248cad06516836644a354abe0",
+    "SIGN_KEY": "0e87696d68db81809176990cb33dda47",
 }
 
 
@@ -345,3 +347,7 @@ class Config:
         self.RABBITMQ_EXCHANGE = get_env("RABBITMQ_EXCHANGE")
         self.RABBITMQ_ROUTING_KEY = get_env("RABBITMQ_ROUTING_KEY")
         self.RABBITMQ_QUEUE = get_env("RABBITMQ_QUEUE")
+
+
+        self.AES_KEY = get_env("AES_KEY")
+        self.SIGN_KEY = get_env("SIGN_KEY")
