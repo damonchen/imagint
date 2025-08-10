@@ -25,7 +25,7 @@ DEFAULTS = {
     "CONSOLE_API_URL": "https://cloud.qr.yihciyu.com",
     "SERVICE_API_URL": "https://api.qr.yihciyu.com",
     # "APP_WEB_URL": "https://app.qr.yihciyu.com",
-    "APP_WEB_URL": "http://127.0.0.1:5060",
+    "APP_WEB_URL": "http://127.0.0.1:5080",
     "FILES_URL": "",
     "S3_ADDRESS_STYLE": "auto",
     "STORAGE_TYPE": "local",
@@ -79,8 +79,10 @@ DEFAULTS = {
     "RABBITMQ_EXCHANGE": "imgint.exchange",
     "RABBITMQ_ROUTING_KEY": "all",
     "RABBITMQ_QUEUE": "imgint.queue",
+    "AAD": "file-service",
     "AES_KEY": "1c6a542248cad06516836644a354abe0",
     "SIGN_KEY": "0e87696d68db81809176990cb33dda47",
+    "IMAGE_PATH": "/mnt/f/dev/Imagint/src/backend/images",
 }
 
 
@@ -348,6 +350,8 @@ class Config:
         self.RABBITMQ_ROUTING_KEY = get_env("RABBITMQ_ROUTING_KEY")
         self.RABBITMQ_QUEUE = get_env("RABBITMQ_QUEUE")
 
-
+        self.AAD = get_env("AAD")
         self.AES_KEY = get_env("AES_KEY")
         self.SIGN_KEY = get_env("SIGN_KEY")
+
+        self.IMAGE_PATH = get_env("IMAGE_PATH")

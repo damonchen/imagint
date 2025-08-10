@@ -1,5 +1,8 @@
 import logging
 import json
+import time
+from urllib.parse import urlencode
+from flask import current_app
 from flask_restful import marshal_with, reqparse
 from flask import stream_with_context
 
@@ -14,8 +17,9 @@ from api.data.fields.chat import (
     chat_fields,
     page_chat_message_fields,
     chat_message_fields,
+    chat_message_image_fields,
 )
-from pygments.lexer import default
+from api.libs.sign_url import encrypt_id, sign_url
 
 from . import api
 from .wraps import WebApiResource
@@ -68,7 +72,7 @@ class ChatMessagesResource(WebApiResource):
         page = args.page
         per_page = args.per_page
 
-        chat_messages = ChatService.get_chat_messages(account, chat_id, page, per_page)
+        chat_messages = ChatMessageService.get_chat_messages(account, chat_id, page, per_page)
 
         return chat_messages
 
@@ -81,49 +85,43 @@ class ChatMessagesResource(WebApiResource):
 
         prompt = args.prompt
         params = args.params
+        count = params.get('count', 1)
 
         chat_message = ChatMessageService.create_messages(
-            account, chat_id, prompt, params
+            account, chat_id, prompt, params, count
         )
 
         return chat_message
 
 
-# class ChatTranslateResource(WebApiResource):
-
-#     @marshal_with(partial_task_fields)
-#     def post(self, account, chat_id):
-#         parser = reqparse.RequestParser()
-#         parser.add_argument("files", type=list, location="json", default=None)
-#         args = parser.parse_args()
-
-#         files = args.files
-#         if files:
-#             print("args files", files)
-#             task = ChatService.translate_message(account, chat_id, files)
-#             return task
-
-
-# class ChatMessageStreamResource(WebApiResource):
-
-#     def get(self, account, chat_id):
-#         # using yield for stream info response
-#         def generate():
-#             yield "hello world"
-
-#         return stream_with_context(generate())
-
-
 class ChatMessageResource(WebApiResource):
 
-    @marshal_with(chat_message_fields)
+    @marshal_with(chat_message_image_fields)
     def get(self, account, chat_id, message_id):
-        chat_message = ChatService.get_chat_message(account, chat_id, message_id)
-        # get message images
-        images = ChatMessageImageService.get_images(account, message_id)
-        chat_message.images = images
+        # chat_message = ChatMessageService.get_chat_message(account, chat_id, message_id)
 
-        return chat_message
+        aes_key = current_app.config.get('AES_KEY').encode('utf-8')
+        aad = current_app.config.get('AAD').encode('utf-8')
+        sign_key = current_app.config.get('SIGN_KEY').encode('utf-8')
+        expire = int(time.time()) + 3600
+        app_web_url = current_app.config.get("APP_WEB_URL")
+
+        images = ChatMessageImageService.get_images(account, message_id)
+        prefix = '/image'
+
+        result = []
+        for image in images:
+            token = encrypt_id(aes_key, image.id, aad)
+            path = f"{prefix}/{token}"
+
+            signature = sign_url(sign_key, path, expire)
+            query = urlencode({'expires': expire, 'sig': signature})
+            r = image.to_dict()
+            r['image_url'] = f'{app_web_url}{path}?{query}'
+
+            result.append(r)
+
+        return result
 
     @marshal_with(chat_message_fields)
     def post(self, account, chat_id, message_id):
@@ -145,7 +143,5 @@ class ChatMessageResource(WebApiResource):
 
 api.add_resource(ChatsResource, "/chats")
 api.add_resource(ChatMessagesResource, "/chats/<chat_id>/messages")
-# api.add_resource(ChatTranslateResource, "/chats/<chat_id>/translate")
-# api.add_resource(ChatMessageStreamResource, "/chats/<chat_id>/messages/stream")
 api.add_resource(ChatMessageResource, "/chats/<chat_id>/messages/<message_id>")
 api.add_resource(ChatResource, "/chats/<chat_id>")
