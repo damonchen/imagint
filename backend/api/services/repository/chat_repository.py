@@ -57,7 +57,7 @@ class ChatMessageRepository(object):
 
     @staticmethod
     def create_message(
-            account: Account, chat_id: str, prompt: str, params: str
+            account: Account, chat_id: str, prompt: str, params: str, count: int = 1
     ) -> ChatMessage:
         message = ChatMessage(
             account_id=account.id,
@@ -65,6 +65,7 @@ class ChatMessageRepository(object):
             prompt=prompt,
             params=params,
             status="pending",
+            count=count,
         )
         db.session.add(message)
         db.session.flush()
@@ -122,7 +123,7 @@ class ChatMessageImageRepository(object):
             message_id = message
 
         message_image = ChatMessageImage(
-            account_id=account.id, chat_message_id=int(message_id), image_path=image
+            account_id=account.id, chat_message_id=int(message_id), image_path=image,
         )
         db.session.add(message_image)
         db.session.flush()
@@ -139,7 +140,7 @@ class ChatMessageImageRepository(object):
         return (
             db.session.query(ChatMessageImage)
             .filter(ChatMessageImage.account_id == account.id)
-            .filter(ChatMessageImage.chat_message_id == message.id)
+            .filter(ChatMessageImage.chat_message_id == message_id)
             .all()
         )
 

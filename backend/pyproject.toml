@@ -9,6 +9,7 @@ dependencies = [
     "blinker>=1.9.0",
     "celery~=5.3.6",
     "click~=8.1.0",
+    "cryptography>=45.0.6",
     "flask~=3.0.1",
     "flask-limiter[redis]>=3.12",
     "flask-login~=0.6.3",

@@ -18,7 +18,8 @@ page_chat_fields = {
 chat_message_image_fields = {
     "id": fields.String(attribute="id"),
     "chatMessageId": fields.String(attribute="chat_message_id"),
-    "imagePath": fields.String(attribute="image_path"),
+    "imageUrl": fields.String(attribute="image_url"),
+    "thumbnailUrl": fields.String(attribute="thumbnail_url")
 }
 
 chat_message_fields = {

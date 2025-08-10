@@ -34,7 +34,6 @@ pnpm-debug.log*
 *.sln
 *.sw?
 /components.d.ts
-/components.d.ts
 
 *.drawio.dtmp
 *drawio.bkp

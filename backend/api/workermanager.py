@@ -195,7 +195,7 @@ class Text2ImageWorker(object):
                 "message": f"Failed to run subprocess: {str(e)}",
             }
             # raise
-        
+
         if stderr_output:
             print(stderr_output.strip())
 
@@ -497,8 +497,9 @@ def prepare_image_path(file_id):
 
 
 def move_image(image_path):
-    prepare_image_path(image_path)
-    shutil.move(image_path, prepare_image_path(image_path))
+    new_path = prepare_image_path(image_path)
+    shutil.move(image_path, new_path)
+    return new_path
 
 
 def move_images(images):
@@ -514,8 +515,9 @@ def prepare_video_path(file_id):
 
 
 def move_video(video_path):
-    prepare_video_path(video_path)
-    shutil.move(video_path, prepare_video_path(video_path))
+    new_path = prepare_video_path(video_path)
+    shutil.move(video_path, new_path)
+    return new_path
 
 
 def move_videos(videos):
@@ -544,16 +546,23 @@ def process_task(task_id, type, task_data):
 
     # 需要将图像或者视频，转移到目标目录下
     if resp.get("media_type") == "image":
+        new_paths = []
         for image_path in resp["images"]:
             # 存储路径格式要求如下，IMAGE_PATH下面有2个字母构建的目录，然后再将文件放到此目录下
             # 例如：/mnt/f/dev/Imagint/src/backend/images/ab/1234567890.png
             # 其中ab是2个字母构建的目录，1234567890.png是文件名
             # 需要将image_path的文件移动到此目录下
-            move_image(image_path)
+            new_path = move_image(image_path)
+            new_paths.append(new_path)
+        resp['images'] = new_paths
 
     elif resp.get("media_type") == "video":
+        new_paths = []
         for video_path in resp["videos"]:
-            move_video(video_path)
+            new_path = move_video(video_path)
+            new_paths.append(new_path)
+
+        resp['videos'] = new_paths
 
     task_db.update_task_status(
         task_id, TaskStatus.PROCESSED, json.dumps(resp, ensure_ascii=False)

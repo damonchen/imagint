@@ -5,7 +5,7 @@ from flask_restful import Resource, reqparse
 
 from api.services.chat_service import ChatMessageImageService
 from api.libs.sign_url import verify_signature, decrypt_token
-from api.service.redis_service import RedisService
+from api.services.redis_service import RedisService
 from . import api
 from ..common.errors import NoFileUploadedError, TooManayFilesError
 
@@ -22,18 +22,21 @@ class BaseFileResource(Resource):
         expires = args.expires
         path = request.path
 
-        if not expires or not sig or not verify_signature(path, expires, sig):
+        print('sig expires path', sig, expires, path, file_token)
+
+        sign_key = current_app.config.get("SIGN_KEY").encode('utf-8')
+        if not expires or not sig or not verify_signature(sign_key, path, expires, sig):
             abort(403, "Signature invalid or expired")
 
         # 检查一次性 token 是否已经使用
-        if RedisService.get(f"used:{file_token}"):
-            abort(403, "URL already used")
-        RedisService.set(f"used:{file_token}", 1, 3600)  # 防重用，1小时保留记录
+        # if RedisService.get(f"used:{file_token}"):
+        #     abort(403, "URL already used")
+        # RedisService.set(f"used:{file_token}", 1, 3600)  # 防重用，1小时保留记录
 
-        aes_key = current_app.config.get("AES_KEY")
+        aes_key = current_app.config.get("AES_KEY").encode('utf-8')
+        aad = current_app.config.get("AAD").encode('utf-8')
 
         try:
-            aad = b"file-service"
             file_id = decrypt_token(aes_key, file_token, aad)
         except ValueError:
             abort(400, "Invalid file token")
@@ -46,11 +49,11 @@ class ImageResource(BaseFileResource):
     def get(self, file_token):
         file_id = self._get(file_token)
         image = ChatMessageImageService.get_image(image_id=file_id)
-        if not image or not os.path.exists(image):
+        if not image or not os.path.exists(image.image_path):
             abort(404, "File not found")
 
         # 得到image对象，然后通过send的方式发送文件出去
-        return send_file(image.image_path, as_attachment=True)
+        return send_file(image.image_path)
 
 
 # 可能也得有一个文件上传的token限制处理，防止恶意上传

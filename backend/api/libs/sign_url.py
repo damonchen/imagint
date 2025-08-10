@@ -2,8 +2,11 @@ import hashlib
 import secrets
 import hmac
 import time
+import logging
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
+logger = logging.getLogger(__name__)
 
 # base36 编码表
 ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -79,4 +82,5 @@ def verify_signature(sign_key: bytes, path: str, expires: int, sig: str) -> bool
     if time.time() > expires:
         return False
     expected = sign_url(sign_key, path, expires)
+    logger.info('expected sign url info %s', expected)
     return hmac.compare_digest(expected, sig)
