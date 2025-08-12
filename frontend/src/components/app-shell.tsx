@@ -1,12 +1,12 @@
 import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import Sidebar from './sidebar'
 import useIsCollapsed from '@/hooks/use-is-collapsed'
-import SelfAccountProvider, { useSelf } from '@/provider/self-account-provider'
+import SelfUserProvider, { useSelf } from '@/provider/self-user-provider'
 import { useAuth } from '@/provider/auth-provider'
 import { useEffect, useState } from 'react'
 
 function MainContent({ isCollapsed }: { isCollapsed: boolean }) {
-  const { account } = useSelf();
+  const { user } = useSelf();
   const location = useLocation();
 
   const navigate = useNavigate();

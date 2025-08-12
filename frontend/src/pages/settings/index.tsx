@@ -32,7 +32,7 @@ export default function Settings() {
             Settings
           </h1>
           <p className='text-muted-foreground'>
-            Manage your account settings and set e-mail preferences.
+            Manage your user settings and set e-mail preferences.
           </p>
         </div>
         <Separator className='my-6' />
@@ -58,9 +58,9 @@ const sidebarNavItems = [
     href: '/settings',
   },
   {
-    title: 'Account',
+    title: 'User',
     icon: <IconTool size={18} />,
-    href: '/settings/account',
+    href: '/settings/user',
   },
   {
     title: 'Appearance',

@@ -12,14 +12,14 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/provider/auth-provider'
-import { useSelf } from '@/provider/self-account-provider';
+import { useSelf } from '@/provider/self-user-provider';
 import { useQuery } from '@tanstack/react-query';
 import { logout } from '@/api/auth'
 import { useState } from 'react';
 
 export function UserNav() {
   const { setToken } = useAuth();
-  const { account } = useSelf();
+  const { user } = useSelf();
   const navigate = useNavigate();
   const [triggerLogout, setTriggerLogout] = useState(false);
 
@@ -32,15 +32,15 @@ export function UserNav() {
   )
 
   const getFirstLetter = () => {
-    if (account && account.name) {
-      return account.name[0].toUpperCase();
+    if (user && user.name) {
+      return user.name[0].toUpperCase();
     }
     return ''
   }
 
-  const onProfileClicked = () => {
-    navigate('/settings');
-  }
+  // const onProfileClicked = () => {
+  //   navigate('/settings');
+  // }
 
   const onBillingClicked = () => {
     navigate('/billing')
@@ -69,18 +69,18 @@ export function UserNav() {
       <DropdownMenuContent className='w-56' align='end' forceMount>
         <DropdownMenuLabel className='font-normal'>
           <div className='flex flex-col space-y-1'>
-            <p className='text-sm font-medium leading-none'>{account.name}</p>
+            <p className='text-sm font-medium leading-none'>{user.name}</p>
             <p className='text-xs leading-none text-muted-foreground'>
-              {account.email}
+              {user.email}
             </p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={onProfileClicked}>
+          {/* <DropdownMenuItem onClick={onProfileClicked}>
             Profile
             <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          </DropdownMenuItem> */}
           <DropdownMenuItem onClick={onBillingClicked}>
             Billing
             <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>

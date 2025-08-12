@@ -1,27 +1,27 @@
 import { useEffect, useMemo, createContext, useContext } from 'react'
 import { useQueryClient, useQuery } from '@tanstack/react-query'
-import { getSelf } from '@/api/account'
+import { getSelf } from '@/api/user'
 import { useState } from 'react'
 
-const SelfAccountContext = createContext({})
+const SelfUserContext = createContext({})
 
-const SelfAccountProvider = ({ children }) => {
+const SelfUserProvider = ({ children }) => {
   const queryClient = useQueryClient()
   const [refresh, setRefresh] = useState(false)
   const { data } = useQuery({
-    queryKey: ['selfAccount'],
+    queryKey: ['selfUser'],
     queryFn: getSelf,
     refetchOnWindowFocus: false,
   })
 
   // useEffect(() => {
-  //   console.log('refresh self account', refresh)
-  //   queryClient.invalidateQueries({ queryKey: ['selfAccount'] })
+  //   console.log('refresh self user', refresh)
+  //   queryClient.invalidateQueries({ queryKey: ['selfUser'] })
   // }, [refresh, queryClient])
 
   const value = useMemo(() => {
     return {
-      account: data ?? {},
+      user: data ?? {},
       forceRefresh: () => {
         if (data) {
           setRefresh((prev) => !prev)
@@ -30,13 +30,13 @@ const SelfAccountProvider = ({ children }) => {
     }
   }, [data])
   return (
-    <SelfAccountContext.Provider value={value}>
+    <SelfUserContext.Provider value={value}>
       {children}
-    </SelfAccountContext.Provider>
+    </SelfUserContext.Provider>
   )
 }
 export const useSelf = () => {
-  return useContext(SelfAccountContext)
+  return useContext(SelfUserContext)
 }
 
-export default SelfAccountProvider
+export default SelfUserProvider

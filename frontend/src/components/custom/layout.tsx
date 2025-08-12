@@ -13,7 +13,7 @@ const Layout = React.forwardRef<HTMLDivElement, LayoutProps>(
       className={cn(
         'relative flex h-full w-full flex-col',
         fadedBelow &&
-          'after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:hidden after:h-32 after:w-full after:bg-[linear-gradient(180deg,_transparent_10%,_hsl(var(--background))_70%)] after:md:block',
+        'after:pointer-events-none after:absolute after:bottom-0 after:left-0 after:hidden after:h-32 after:w-full after:bg-[linear-gradient(180deg,_transparent_10%,_hsl(var(--background))_70%)] after:md:block',
         fixedHeight && 'md:h-svh',
         className
       )}
@@ -47,7 +47,7 @@ const LayoutBody = React.forwardRef<HTMLDivElement, LayoutBodyProps>(
     <div
       ref={ref}
       className={cn(
-        'flex-1 overflow-hidden px-4 py-6 md:px-8',
+        'flex-1 overflow-hidden px-4 py-6 md:px-8 min-h-screen',
         fixedHeight && 'h-[calc(100%-var(--header-height))]',
         className
       )}

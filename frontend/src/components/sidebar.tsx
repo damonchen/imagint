@@ -5,7 +5,7 @@ import { Button } from './custom/button'
 import Nav from './nav'
 import { cn } from '@/lib/utils'
 import { sidelinks } from '@/data/sidelinks'
-import { useSelf } from '@/provider/self-account-provider'
+import { useSelf } from '@/provider/self-user-provider'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
 import { useNavigate } from 'react-router-dom'
@@ -21,7 +21,7 @@ export default function Sidebar2({
   setIsCollapsed,
 }: SidebarProps) {
   const [navOpened, setNavOpened] = useState(false)
-  const { account } = useSelf();
+  const { user } = useSelf();
 
   const navigate = useNavigate();
 
@@ -119,27 +119,27 @@ export default function Sidebar2({
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-12 w-full justify-start gap-2 px-2">
                   <Avatar className="h-8 w-8">
-                    {account?.avatar ? (
-                      <AvatarImage src={account.avatar} alt={account.name} />
+                    {user?.avatar ? (
+                      <AvatarImage src={user.avatar} alt={user.name} />
                     ) : (
                       <AvatarFallback>
-                        {account?.name?.charAt(0) || "U"}
+                        {user?.name?.charAt(0) || "U"}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   <span className={`truncate text-sm ${isCollapsed ? 'hidden' : 'block'}`}>
-                    {account?.name || "User"}
+                    {user?.name || "User"}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="start" side="right">
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <IconSettings className="mr-2 h-4 w-4" />
-                  <span>用户设置</span>
+                  <span>Setting</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate('/billing')}>
                   <IconReceipt className="mr-2 h-4 w-4" />
-                  <span>账单查看</span>
+                  <span>Billing</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

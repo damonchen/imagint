@@ -240,7 +240,7 @@ export const translations: Record<Language, Translations> = {
                 },
                 {
                     question: "How do I get started?",
-                    answer: "Simply sign up for a free account, enter your text prompt describing the image you want, and let our AI do the magic!"
+                    answer: "Simply sign up for a free user, enter your text prompt describing the image you want, and let our AI do the magic!"
                 },
                 {
                     question: "What image styles are available?",
