@@ -91,7 +91,7 @@ You have the right to:
 
 - Access your personal information
 - Correct inaccurate information
-- Delete your account and data
+- Delete your user and data
 - Export your data
 
 ### 6.2 Opt-out Options
@@ -209,13 +209,13 @@ We will notify you within 72 hours of discovering a breach, where required by la
 
 ## 15. Your Choices
 
-### 15.1 Account Settings
+### 15.1 User Settings
 
-You can manage your privacy settings through your account dashboard.
+You can manage your privacy settings through your user dashboard.
 
 ### 15.2 Communication Preferences
 
-You can control how we communicate with you through your account settings.
+You can control how we communicate with you through your user settings.
 
 ### 15.3 Data Export
 

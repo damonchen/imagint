@@ -21,7 +21,6 @@ import { signUp } from '@/api/auth'
 import { useAuth } from '@/provider/auth-provider'
 import { useEffect } from 'react'
 
-
 // const formSchema = z
 //   .object({
 //     email: z
@@ -60,17 +59,17 @@ export function SignUpForm({ className, ...props }) {
       // 跳转到首页
       setTimeout(() => {
         // 延迟可保证access_token数据能够写入到local storage后再处理
-        navigate('/');
+        navigate('/')
       }, 400)
     },
     onError: (error, variables, context) => {
       console.log('respone', error, variables, context)
     },
     onSettled: () => {
-      setIsLoading(false);
-    }
+      setIsLoading(false)
+    },
   })
- 
+
   const form = useForm({
     defaultValues: {
       email: '',
@@ -79,7 +78,6 @@ export function SignUpForm({ className, ...props }) {
       confirmPassword: '',
     },
   })
-
 
   function onSubmit(data) {
     setIsLoading(true)
@@ -104,7 +102,11 @@ export function SignUpForm({ className, ...props }) {
                 <FormItem className='space-y-1'>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder='name@expanse.com' {...field} {...form.register("email", {required: true})}/>
+                    <Input
+                      placeholder='name@expanse.com'
+                      {...field}
+                      {...form.register('email', { required: true })}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -118,7 +120,11 @@ export function SignUpForm({ className, ...props }) {
                 <FormItem className='space-y-1'>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <PasswordInput placeholder='********' {...field}  {...form.register("password", {required: true})}/>
+                    <PasswordInput
+                      placeholder='********'
+                      {...field}
+                      {...form.register('password', { required: true })}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -131,7 +137,11 @@ export function SignUpForm({ className, ...props }) {
                 <FormItem className='space-y-1'>
                   <FormLabel>Confirm Password</FormLabel>
                   <FormControl>
-                    <PasswordInput placeholder='********' {...field} {...form.register("confirmPassword",  {required: true})}/>
+                    <PasswordInput
+                      placeholder='********'
+                      {...field}
+                      {...form.register('confirmPassword', { required: true })}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -144,14 +154,17 @@ export function SignUpForm({ className, ...props }) {
                 <FormItem className='space-y-1'>
                   <FormLabel>Invited Code</FormLabel>
                   <FormControl>
-                    <Input placeholder='Enter invited code if exists' {...field} />
+                    <Input
+                      placeholder='Enter invited code if exists'
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button className='mt-2' loading={isLoading}>
-              Create Account
+              Create User
             </Button>
 
             <div className='relative my-2'>

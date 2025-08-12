@@ -15,33 +15,33 @@ Imagint Labs provides an AI-powered image generation service that allows users t
 - Text-to-image generation
 - Multiple style options
 - Image editing tools
-- User account management
+- User user management
 
 ### 2.2 Service Availability
 
 We strive to maintain high service availability but do not guarantee uninterrupted access. We may temporarily suspend the service for maintenance or updates.
 
-## 3. User Accounts
+## 3. User Users
 
-### 3.1 Account Creation
+### 3.1 User Creation
 
-To use certain features of our service, you must create an account. You agree to:
+To use certain features of our service, you must create an user. You agree to:
 
 - Provide accurate and complete information
-- Maintain the security of your account credentials
+- Maintain the security of your user credentials
 - Notify us immediately of any unauthorized use
 
-### 3.2 Account Responsibilities
+### 3.2 User Responsibilities
 
 You are responsible for:
 
-- All activities under your account
+- All activities under your user
 - Maintaining the confidentiality of your password
-- Ensuring your account information is current
+- Ensuring your user information is current
 
-### 3.3 Account Termination
+### 3.3 User Termination
 
-We reserve the right to terminate accounts that violate these terms or engage in fraudulent activity.
+We reserve the right to terminate users that violate these terms or engage in fraudulent activity.
 
 ## 4. Acceptable Use
 
@@ -182,7 +182,7 @@ You agree to indemnify us against claims arising from:
 - Your use of the service
 - Your violation of these terms
 - Your generated content
-- Your account activities
+- Your user activities
 
 ### 10.2 Our Indemnification
 
@@ -192,11 +192,11 @@ We will defend you against claims that our service infringes third-party intelle
 
 ### 11.1 Termination by You
 
-You may terminate your account at any time by contacting us or using the account deletion feature.
+You may terminate your user at any time by contacting us or using the user deletion feature.
 
 ### 11.2 Termination by Us
 
-We may terminate your account for:
+We may terminate your user for:
 
 - Violation of these terms
 - Fraudulent activity

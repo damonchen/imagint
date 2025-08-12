@@ -27,13 +27,13 @@ export default function SignIn() {
               <h1 className='text-lg font-semibold tracking-tight'>Sign In</h1>
               <p className='text-sm text-muted-foreground'>
                 Enter your email and password below to <br /> sign into your
-                account.
+                user.
               </p>
             </div>
             <SignInForm />
 
             <div className='mt-2 text-right text-sm text-muted-foreground'>
-              Don't have an account?{' '}
+              Don't have an user?{' '}
               <Link
                 to='/auth/sign-up'
                 className='underline underline-offset-4 hover:text-primary'

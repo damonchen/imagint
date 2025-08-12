@@ -26,7 +26,7 @@ export default function SignIn2() {
               <h1 className='text-2xl font-semibold tracking-tight'>Login</h1>
               <p className='text-sm text-muted-foreground'>
                 Enter your email and password below <br />
-                to log into your account
+                to log into your user
               </p>
             </div>
             <UserAuthForm />

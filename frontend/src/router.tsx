@@ -48,7 +48,13 @@ const router = createHashRouter([
       {
         index: true,
         lazy: async () => ({
-          Component: (await import('./pages/dashboard')).default,
+          Component: (await import('./pages/dashboard/index')).default,
+        }),
+      },
+      {
+        path: 'chats',
+        lazy: async () => ({
+          Component: (await import('./pages/chat')).default,
         }),
       },
       {
@@ -65,9 +71,9 @@ const router = createHashRouter([
             }),
           },
           {
-            path: 'account',
+            path: 'user',
             lazy: async () => ({
-              Component: (await import('./pages/settings/account')).default,
+              Component: (await import('./pages/settings/user')).default,
             }),
           },
           {
