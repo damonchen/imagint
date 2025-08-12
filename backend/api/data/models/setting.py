@@ -10,7 +10,7 @@ class Setting(db.Model):
     __tablename__ = "settings"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    account_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     container_type = db.Column(db.String(26), nullable=False)
     key = db.Column(db.String(512), nullable=False)
     value = db.Column(JSONType)

@@ -4,14 +4,14 @@ from flask_restful import marshal_with, reqparse
 
 from api.services.redis_service import RedisService
 
-from api.services.account_service import AccountService
+from api.services.user_service import UserService
 from api.data.fields.task_fields import (
     task_fields,
     task_pagination_fields,
     dispatch_task_fields,
 )
 from api.services.task_service import TaskService
-from api.services.chat_service import ChatMessageImageService
+from api.services.chat_service import ChatMessageImageService, ChatMessageService
 from api.services.repository.task_repository import TaskRepository
 from . import api
 from .wraps import WebApiResource, TaskApiResource
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class TasksResource(WebApiResource):
 
     @marshal_with(task_pagination_fields)
-    def get(self, account):
+    def get(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("status", type=str, location="args")
         parser.add_argument("page", type=int, location="args", default=1)
@@ -33,7 +33,7 @@ class TasksResource(WebApiResource):
         page = args.page
         per_page = args.per_page
         tasks, total = TaskService.list_tasks(
-            account, status=status, page=page, per_page=per_page
+            user, status=status, page=page, per_page=per_page
         )
 
         return {
@@ -45,13 +45,13 @@ class TasksResource(WebApiResource):
         }
 
     @marshal_with(task_fields)
-    def post(self, account):
+    def post(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("payload", type=dict, location="json", required=True)
         args = parser.parse_args()
 
         payload = args.payload
-        task = TaskService.create_task_and_dispatch(account, payload)
+        task = TaskService.create_task_and_dispatch(user, payload)
         return task
 
 
@@ -85,9 +85,14 @@ class TaskResource(TaskApiResource):
             logger.info(f"task {task_id} not found ")
             return {"task_id": None}
 
-        account = AccountService.load_account(task.account_id)
+        user = UserService.load_user(task.user_id)
 
-        TaskService.update_task_status(account, task.task_id, status="running")
+        status = "running"
+        TaskService.update_task_status(user, task.task_id, status=status)
+
+        # 同时也需要更新chat_messages，表明任务已经在执行中了
+        message_id = task.payload.get("message_id")
+        ChatMessageService.update_message_status(user, message_id, status=status)
 
         if task:
             payload = task.payload
@@ -123,7 +128,7 @@ class TaskCompleteResource(TaskApiResource):
             logger.info(f"task not valid {task_id}")
             return json.dumps({"task_id": None})
 
-        account = AccountService.load_account(task.account_id)
+        user = UserService.load_user(task.user_id)
         payload = task.payload
 
         media_type = result.get("media_type")
@@ -131,9 +136,15 @@ class TaskCompleteResource(TaskApiResource):
             images = result.get("images")
             message_id = payload.get("message_id")
 
-            ChatMessageImageService.create_images(account, message_id, images)
+            ChatMessageImageService.create_images(user, message_id, images)
 
-        task = TaskService.update_task_status(account, task_id, status, result)
+        task = TaskService.update_task_status(user, task_id, status, result)
+
+        TaskService.update_task_status(user, task_id, status=status)
+
+        message_id = task.payload.get("message_id")
+        ChatMessageService.update_message_status(user, message_id, status=status)
+
         return task
 
 

@@ -2,7 +2,7 @@ from enum import StrEnum
 from api.libs.language import LanguageEnumValue
 
 
-class AccountStatus(StrEnum):
+class UserStatus(StrEnum):
     PENDING = "pending"
     UNINITIALIZED = "uninitialized"
     ACTIVE = "active"
@@ -12,7 +12,7 @@ class AccountStatus(StrEnum):
 
     @staticmethod
     def value_of(value):
-        for member in AccountStatus:
+        for member in UserStatus:
             if member.value == value:
                 return member
         return ValueError("not matching enum found for value: {}".format(value))

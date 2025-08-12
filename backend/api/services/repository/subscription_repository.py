@@ -23,10 +23,10 @@ class PlanRepository(object):
 class SubscriptionRepository(object):
 
     @staticmethod
-    def list_subscriptions(account, status=SubscriptionStatus.ACTIVE.value):
+    def list_subscriptions(user, status=SubscriptionStatus.ACTIVE.value):
         return (
             db.session.query(Subscription)
-            .filter(Subscription.account_id == account.id, Subscription.status == status)
+            .filter(Subscription.user_id == user.id, Subscription.status == status)
             .all()
         )
 
@@ -39,33 +39,33 @@ class SubscriptionRepository(object):
         )
 
     @staticmethod
-    def create_subscription(account, plan, status=SubscriptionStatus.ACTIVE.value):
+    def create_subscription(user, plan, status=SubscriptionStatus.ACTIVE.value):
         now = datetime.datetime.now(datetime.UTC)
         ended_at = now = relativedelta(months=+plan.month)
 
         subscription = Subscription(
-            account_id=account.id,
+            user_id=user.id,
             plan_id=plan.id,
             plan_type=plan.type,
             started_at=now,
             ended_at=ended_at,
             status=status,
-            created_by=account.id,
-            updated_by=account.id,
+            created_by=user.id,
+            updated_by=user.id,
         )
         db.session.add(subscription)
         db.session.flush()
 
-        subscription_was_created.send(subscription)
+        # subscription_was_created.send(subscription)
 
         return subscription
 
     @staticmethod
     def update_subscription(
-        account,
-        subscription_id,
-        plan_id=None,
-        status=None,
+            user,
+            subscription_id,
+            plan_id=None,
+            status=None,
     ):
         subscription = SubscriptionRepository.load_subscription(
             subscription_id, status=SubscriptionStatus.ACTIVE.value
@@ -73,7 +73,7 @@ class SubscriptionRepository(object):
         if subscription is None:
             raise NotFoundError("subscription not found")
 
-        if subscription.account_id != account.id:
+        if subscription.user_id != user.id:
             raise NotPermittedError("subscription not permitted")
 
         if plan_id is not None:
@@ -90,7 +90,7 @@ class SubscriptionRepository(object):
         if status is not None:
             subscription.status = status
 
-        subscription.updated_by = account.id
+        subscription.updated_by = user.id
 
         db.session.add(subscription)
         db.session.flush()
@@ -98,39 +98,31 @@ class SubscriptionRepository(object):
         return subscription
 
     @staticmethod
-    def active_subscription(account, subscription_id):
+    def active_subscription(user, subscription_id):
         status = SubscriptionStatus.ACTIVE.value
-        return SubscriptionRepository.update_subscription(
-            account, subscription_id, status
-        )
+        return SubscriptionRepository.update_subscription(user, subscription_id, status)
 
     @staticmethod
-    def pasue_subscription(account, subscription_id):
+    def pasue_subscription(user, subscription_id):
         status = SubscriptionStatus.PAUSED.value
-        return SubscriptionRepository.update_subscription(
-            account, subscription_id, status
-        )
+        return SubscriptionRepository.update_subscription(user, subscription_id, status)
 
     @staticmethod
-    def cancel_subscription(account, subscription_id):
+    def cancel_subscription(user, subscription_id):
         status = SubscriptionStatus.CANCELLED.value
-        return SubscriptionRepository.update_subscription(
-            account, subscription_id, status
-        )
+        return SubscriptionRepository.update_subscription(user, subscription_id, status)
 
     @staticmethod
-    def expire_subscription(account, subscription_id):
+    def expire_subscription(user, subscription_id):
         status = SubscriptionStatus.EXPIRED.value
-        return SubscriptionRepository.update_subscription(
-            account, subscription_id, status
-        )
+        return SubscriptionRepository.update_subscription(user, subscription_id, status)
 
 
 class OrderRepository(object):
 
     @staticmethod
     def create_order(
-        account, subscription_id, amount, discount_amount=0, payment_channel=""
+            user, subscription_id, amount, discount_amount=0, payment_channel=""
     ):
         subscription = SubscriptionRepository.load_subscription(
             subscription_id=subscription_id
@@ -139,14 +131,14 @@ class OrderRepository(object):
             raise NotFoundError()
 
         order = Order(
-            account_id=account.id,
+            user_id=user.id,
             subscription_id=subscription.id,
             amount=amount,
             discount_amount=discount_amount,
             payment_channel=payment_channel,
             status=OrderStatus.PENDING.value,
-            created_by=account.id,
-            udpated_by=account.id,
+            created_by=user.id,
+            udpated_by=user.id,
         )
         db.session.add(order)
         db.session.flush()
@@ -158,8 +150,8 @@ class OrderRepository(object):
         return db.session.query(Order).filter(Order.trade_no == trade_no).first()
 
     @staticmethod
-    def load_order(order_id):
-        return db.session.query(Order).filter(Order.id == order_id).first()
+    def load_order(user, order_id):
+        return db.session.query(Order).filter(Order.user_id == user.id).filter(Order.id == order_id).first()
 
     @staticmethod
     def load_order_by_subscription_id(subscription_id):
@@ -170,7 +162,12 @@ class OrderRepository(object):
         )
 
     @staticmethod
-    def pay_order(account, trade_no, paid_amount):
+    def load_orders(user):
+        orders = db.session.query(Order).filter(Order.user_id == user.id).all()
+        return orders
+
+    @staticmethod
+    def pay_order(user, trade_no, paid_amount):
         order = OrderRepository.load_order_by_trade_no(trade_no)
         if order is None:
             raise NotFoundError()
@@ -178,7 +175,7 @@ class OrderRepository(object):
         order.status = OrderStatus.PAID.value
         order.paid_amount = paid_amount
         order.payment_at = datetime.datetime.now(datetime.UTC)
-        order.updated_by = account.id
+        order.updated_by = user.id
 
         db.session.add(order)
         db.session.flush()
@@ -186,13 +183,13 @@ class OrderRepository(object):
         return order
 
     @staticmethod
-    def cancel_order(account, trade_no):
+    def cancel_order(user, trade_no):
         order = OrderRepository.load_order_by_trade_no(trade_no)
         if order is None:
             raise NotFoundError()
 
         order.status = OrderStatus.CANCELLED.value
-        order.updated_by = account.id
+        order.updated_by = user.id
 
         db.session.add(order)
         db.session.flush()
@@ -200,13 +197,13 @@ class OrderRepository(object):
         return order
 
     @staticmethod
-    def expire_order(account, trade_no):
+    def expire_order(user, trade_no):
         order = OrderRepository.load_order_by_trade_no(trade_no)
         if order is None:
             raise NotFoundError()
 
         order.status = OrderStatus.EXPIRED.value
-        order.updated_by = account.id
+        order.updated_by = user.id
 
         db.session.add(order)
         db.session.flush()
@@ -215,10 +212,10 @@ class OrderRepository(object):
 
     @staticmethod
     def update_order_status(
-        order, account, status, paid_amount=None, payment_channel=None
+            order, user, status, paid_amount=None, payment_channel=None
     ):
         order.status = status
-        order.updated_by = account.id
+        order.updated_by = user.id
 
         if paid_amount is not None:
             order.paid_amount = paid_amount

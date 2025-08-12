@@ -1,7 +1,7 @@
 import logging
 from functools import wraps
 from flask import g, make_response, request, session, redirect
-from api.services.account_service import AccountService
+from api.services.user_service import UserService
 from api.extensions.login import token_coder
 
 logger = logging.getLogger("decorator")
@@ -10,9 +10,9 @@ logger = logging.getLogger("decorator")
 def manager_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        account = g.account
-        if not account.is_manager:
-            logger.error(f"account {account.email} is not manager")
+        user = g.user
+        if not user.is_manager:
+            logger.error(f"user {user.email} is not manager")
             return make_response("Forbidden", 403)
 
         return func(*args, **kwargs)
@@ -29,13 +29,13 @@ def token_required(func):
             scheme, token = authorization.split(" ")
             if scheme == "Bearer":
                 payload = token_coder.decode(token)
-                account_id = payload["account_id"]
+                user_id = payload["user_id"]
 
-                account = AccountService.load_account(account_id)
-                if account is None:
+                user = UserService.load_user(user_id)
+                if user is None:
                     return make_response("Forbidden", 403)
 
-                g.account = account
+                g.user = user
             else:
                 logger.error("scheme not bearer")
                 return make_response("Forbidden", 403)
@@ -68,16 +68,12 @@ def any_required(required_funcs):
 def finance_required(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
-        account = g.account
-        if account is None:
-            logger.error("account not exist")
+        user = g.user
+        if user is None:
+            logger.error("user not exist")
             return make_response("Forbidden", 403)
 
-        if (
-                account.has_finance_manager
-                or account.has_cashier
-                or account.hash_accountant
-        ):
+        if user.has_finance_manager or user.has_cashier or user.hash_userant:
             return func(*args, **kwargs)
         else:
             return make_response("Forbidden", 403)

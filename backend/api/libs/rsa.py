@@ -29,15 +29,15 @@ class EncryptStruct(object):
         return encrypted_aes_key, nonce, digest, ciphertext
 
 
-def get_account_private_filepath(account_id):
-    return f"privkeys/{account_id}/private.pem"
+def get_user_private_filepath(user_id):
+    return f"privkeys/{user_id}/private.pem"
 
 
-def generate_key_pair(account_id, key_size=2048):
+def generate_key_pair(user_id, key_size=2048):
     key = RSA.generate(key_size)
 
     private_key = key.export_key()
-    filepath = get_account_private_filepath(account_id)
+    filepath = get_user_private_filepath(user_id)
     storage.save(filepath, private_key)
 
     public_key = key.publickey().export_key()
@@ -58,8 +58,8 @@ def encrypt(text, public_key, prefix):
     return struct.pack(encrypted_aes_key, cipher_aes.nonce, digest, ciphertext)
 
 
-def decrypt(account_id, encrypted_data, prefix):
-    filepath = get_account_private_filepath(account_id)
+def decrypt(user_id, encrypted_data, prefix):
+    filepath = get_user_private_filepath(user_id)
     private_key = storage.load(filepath)
     rsa_key = RSA.import_key(private_key)  # type: ignore
     cipher_rsa = PKCS1_OAEP.new(rsa_key)

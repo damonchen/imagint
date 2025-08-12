@@ -47,7 +47,7 @@ def get_attachment(file_id):
 class FileApi(WebApiResource):
 
     @marshal_with(list_attachment_file_fields)
-    def post(self, account):
+    def post(self, user):
         print("file upload api", request.files)
         if "files" not in request.files:
             raise NoFileUploadedError
@@ -64,7 +64,7 @@ class FileApi(WebApiResource):
         try:
             if isinstance(files, FileStorage):
                 uploaded_file = AttachementService.upload_file(
-                    account,
+                    user,
                     temp_folder,
                     files,
                 )
@@ -72,7 +72,7 @@ class FileApi(WebApiResource):
             else:
                 for file in files:
                     uploaded_file = AttachementService.upload_file(
-                        account,
+                        user,
                         temp_folder,
                         file,
                     )
@@ -101,16 +101,16 @@ class FileApi(WebApiResource):
 
 class FileConfigApi(WebApiResource):
 
-    def post(self, account, file_id):
-        AttachementService.move_to_permanent(account, file_id)
+    def post(self, user, file_id):
+        AttachementService.move_to_permanent(user, file_id)
 
         return {"message": "File config updated", "status": "confirmed"}, 200
 
 
 class FileCancelApi(WebApiResource):
 
-    def post(self, account, file_id):
-        AttachementService.delete_attachment(account, file_id)
+    def post(self, user, file_id):
+        AttachementService.delete_attachment(user, file_id)
 
         return {"message": "File config updated", "status": "cancelled"}, 200
 

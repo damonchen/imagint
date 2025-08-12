@@ -14,7 +14,7 @@ class Chat(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = Column(String(512), nullable=False)
-    account_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.now)
 
 
@@ -25,7 +25,7 @@ class ChatMessage(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     chat_id = Column(String(64), nullable=False)
-    account_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     type = Column(String(32), default="text")  # text, image, etc.
     prompt = Column(Text)  # image path，储存的是attachment中的file_id的列表？
     params = Column(JSONType)  # 其他参数
@@ -43,7 +43,7 @@ class ChatMessageImage(db.Model):
     __tablename__ = "chat_message_images"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    account_id = Column(Integer, nullable=False)
+    user_id = Column(Integer, nullable=False)
     chat_message_id = Column(db.Integer, ForeignKey("chat_messages.id"), nullable=False)
     image_path = Column(Text, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
@@ -53,6 +53,6 @@ class ChatMessageImage(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "account_id": self.account_id,
+            "user_id": self.user_id,
             "chat_message_id": self.chat_message_id,
         }

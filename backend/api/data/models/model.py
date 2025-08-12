@@ -20,11 +20,11 @@ class OperationLog(db.Model):
 
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="operation_log_pkey"),
-        db.Index("operation_log_account_action_idx", "account_id", "action"),
+        db.Index("operation_log_user_action_idx", "user_id", "action"),
     )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    account_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     action = db.Column(db.String(255), nullable=False)
     payload = db.Column(db.Text, nullable=False)
     ip = db.Column(db.String(255), nullable=False)

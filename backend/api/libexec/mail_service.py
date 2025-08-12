@@ -5,13 +5,13 @@ from api.services.redis_service import RedisService
 
 while True:
     try:
-        key = 'mail:account:register'
+        key = "mail:user:register"
         value = RedisService.rpush(key)
-        account_info = json.loads(value)
+        user_info = json.loads(value)
 
-        token = account_info['token']
+        token = user_info["token"]
 
-        MailService.send_register_token_mail(account_info, token)
+        MailService.send_register_token_mail(user_info, token)
     except KeyboardInterrupt:
         break
     except Exception as e:

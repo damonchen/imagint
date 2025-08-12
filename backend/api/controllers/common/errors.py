@@ -7,10 +7,10 @@ class NotFoundError(BaseHTTPException):
     code = 400
 
 
-class CreatedAccountError(BaseHTTPException):
+class CreatedUserError(BaseHTTPException):
 
-    error_code = "created_account_error"
-    description = "created account error"
+    error_code = "created_user_error"
+    description = "created user error"
     code = 400
 
 

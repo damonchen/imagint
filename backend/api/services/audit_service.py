@@ -12,10 +12,10 @@ class AuditService(object):
         return db.session.query(AppSetup).all()
 
     @staticmethod
-    def add_operation(account_id, action, payload, created_by):
+    def add_operation(user_id, action, payload, created_by):
         ip = get_remote_ip(request)
         operation = OperationLog(
-            account_id=account_id,
+            user_id=user_id,
             action=action,
             payload=payload,
             created_by=created_by,
@@ -31,9 +31,7 @@ class AuditService(object):
         return db.session.query(OperationLog).all()
 
     @staticmethod
-    def list_operations_by_account(account_id):
+    def list_operations_by_user(user_id):
         return (
-            db.session.query(OperationLog)
-            .filter(OperationLog.account_id == account_id)
-            .all()
+            db.session.query(OperationLog).filter(OperationLog.user_id == user_id).all()
         )

@@ -19,7 +19,7 @@ list_plan_fields = fields.List(fields.Nested(plan_fields))
 
 subscription_fields = {
     "id": fields.String(attribute="id"),
-    "account_id": fields.String(attribute="account_id"),
+    "user_id": fields.String(attribute="user_id"),
     "plan_id": fields.String(attribute="plan_id"),
     "started_at": fields.String(attribute="started_at"),
     "ended_at": fields.String(attribute="ended_at"),

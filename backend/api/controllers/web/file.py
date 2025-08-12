@@ -1,5 +1,6 @@
 import os
 import uuid
+import logging
 from flask import request, abort, current_app, send_file
 from flask_restful import Resource, reqparse
 
@@ -8,6 +9,8 @@ from api.libs.sign_url import verify_signature, decrypt_token
 from api.services.redis_service import RedisService
 from . import api
 from ..common.errors import NoFileUploadedError, TooManayFilesError
+
+logger = logging.getLogger(__name__)
 
 
 class BaseFileResource(Resource):
@@ -22,7 +25,7 @@ class BaseFileResource(Resource):
         expires = args.expires
         path = request.path
 
-        print('sig expires path', sig, expires, path, file_token)
+        logger.info('sig expires path %s %s %s %s', sig, expires, path, file_token)
 
         sign_key = current_app.config.get("SIGN_KEY").encode('utf-8')
         if not expires or not sig or not verify_signature(sign_key, path, expires, sig):
@@ -53,6 +56,22 @@ class ImageResource(BaseFileResource):
             abort(404, "File not found")
 
         # 得到image对象，然后通过send的方式发送文件出去
+        return send_file(image.image_path)
+
+
+class ImageThumbnailResource(BaseFileResource):
+
+    def get(self, file_token, width, height):
+        logger.info("thumbnail token %s width and height: %sx%s", file_token, width, height)
+        file_id = self._get(file_token)
+
+        logger.info("get file token id %s", file_id)
+        image = ChatMessageImageService.get_image(image_id=file_id)
+
+        if not image or not os.path.exists(image.image_path):
+            abort(404, "File not found")
+
+        # 从thumbnail中直接处理返回
         return send_file(image.image_path)
 
 
@@ -91,5 +110,6 @@ class FileUploadResource(Resource):
 
 
 api.add_resource(ImageResource, "/image/<file_token>")
+api.add_resource(ImageThumbnailResource, "/image/<file_token>/<width>x<height>")
 
 api.add_resource(FileUploadResource, "/file/upload")

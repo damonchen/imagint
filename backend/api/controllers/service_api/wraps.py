@@ -6,7 +6,7 @@ from flask_restful import Resource
 from werkzeug.exceptions import NotFound, Unauthorized
 from api.extensions.login import token_coder
 from api.extensions.database import db
-from api.data.models.account import Account
+from api.data.models.user import User
 from api.services.task_service import TaskWorkerService
 
 
@@ -14,8 +14,8 @@ def validate_api_token(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        account = decode_jwt_token()
-        return func(account, *args, **kwargs)
+        user = decode_jwt_token()
+        return func(user, *args, **kwargs)
 
     return wrapper
 
@@ -58,14 +58,16 @@ def decode_jwt_token():
         raise Unauthorized("Invalid authorization scheme")
 
     payload = token_coder.decode(auth_token)
-    account_id = payload["account_id"]
+    user_id = payload.get("user_id")
+    if user_id is None:
+        raise Unauthorized("Invalid authorization scheme")
 
-    account = db.session.query(Account).filter(Account.id == account_id).first()
-    if account is None:
+    user = db.session.query(User).filter(User.id == user_id).first()
+    if user is None:
         raise NotFound()
 
-    g.account = account
-    return account
+    g.user = user
+    return user
 
 
 class WebApiResource(Resource):

@@ -15,7 +15,7 @@ class Attachement(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     file_id = db.Column(db.String(128), nullable=False)
-    account_id = db.Column(db.Integer, nullable=True)
+    user_id = db.Column(db.Integer, nullable=True)
     original_name = db.Column(db.String(1024), nullable=False)
     storage_path = db.Column(db.String(1024), nullable=False)
     file_size = db.Column(db.Integer, nullable=False)

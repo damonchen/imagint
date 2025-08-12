@@ -17,8 +17,8 @@ class SetupResource(Resource):
 class OperationResource(WebApiResource):
 
     @manager_required
-    def get(self, account):
-        return AuditService.list_operations_by_account(account_id=account.id)
+    def get(self, user):
+        return AuditService.list_operations_by_user(user_id=user.id)
 
 
 api.add_resource(
