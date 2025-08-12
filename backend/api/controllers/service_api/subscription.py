@@ -27,22 +27,22 @@ class PlanApiResource(Resource):
 class PlanPayResource(WebApiResource):
 
     @marshal_with(subscription_fields)
-    def post(self, account, plan_id):
-        subscription = SubscriptionService.create_subscription(account, plan_id)
+    def post(self, user, plan_id):
+        subscription = SubscriptionService.create_subscription(user, plan_id)
         return subscription
 
 
 class SubscriptionsResource(WebApiResource):
 
     @marshal_with(list_subscription_fields)
-    def get(self, account):
-        return SubscriptionService.list_subscriptions(account)
+    def get(self, user):
+        return SubscriptionService.list_subscriptions(user)
 
 
 class SubscriptionResource(WebApiResource):
 
     @marshal_with(subscription_fields)
-    def get(self, account, subscription_id):
+    def get(self, user, subscription_id):
         subscription = SubscriptionService.load_subscription(subscription_id)
         return subscription
 
@@ -50,7 +50,7 @@ class SubscriptionResource(WebApiResource):
 class SubscriptionPaymentResource(WebApiResource):
 
     @marshal_with(order_fields)
-    def post(self, account, subscription_id):
+    def post(self, user, subscription_id):
         parser = reqparse.RequestParser()
         parser.add_argument("channel", type=str, location="json")
         parser.add_argument("plan", type=str, location="json")
@@ -60,7 +60,7 @@ class SubscriptionPaymentResource(WebApiResource):
         channel = args.channel
 
         order = OrderService.create_order(
-            account,
+            user,
             subscription_id,
             channel,
         )
@@ -72,8 +72,8 @@ class OrderCancelResource(WebApiResource):
 
     @manager_required
     @marshal_with(order_fields)
-    def put(self, account, order_id):
-        order = OrderService.cancel_order(account, order_id)
+    def put(self, user, order_id):
+        order = OrderService.cancel_order(user, order_id)
         return order
 
 
@@ -81,8 +81,8 @@ class OrderRefundResource(WebApiResource):
 
     @manager_required
     @marshal_with(order_fields)
-    def put(self, account, order_id):
-        order = OrderService.refund_order(account, order_id)
+    def put(self, user, order_id):
+        order = OrderService.refund_order(user, order_id)
         return order
 
 
@@ -90,8 +90,8 @@ class OrderSuccessResource(WebApiResource):
 
     @manager_required
     @marshal_with(order_fields)
-    def put(self, account, order_id):
-        order = OrderService.success_order(account, order_id)
+    def put(self, user, order_id):
+        order = OrderService.success_order(user, order_id)
         return order
 
 
@@ -99,8 +99,8 @@ class OrderFailResource(WebApiResource):
 
     @manager_required
     @marshal_with(order_fields)
-    def put(self, account, order_id):
-        order = OrderService.fail_order(account, order_id)
+    def put(self, user, order_id):
+        order = OrderService.fail_order(user, order_id)
         return order
 
 
@@ -108,7 +108,7 @@ class OrderStartResource(WebApiResource):
 
     @manager_required
     @marshal_with(order_fields)
-    def put(self, account, order_id):
+    def put(self, user, order_id):
         parser = reqparse.RequestParser()
         parser.add_argument("channel", type=str, location="json")
         args = parser.parse_args()
@@ -116,10 +116,25 @@ class OrderStartResource(WebApiResource):
         channel = args.channel
 
         order = OrderService.start_order(
-            account,
+            user,
             order_id,
             channel,
         )
+        return order
+
+
+class OrdersResource(WebApiResource):
+
+    @marshal_with(order_fields)
+    def get(self, user):
+        return OrderService.list_orders(user)
+
+
+class OrderResource(WebApiResource):
+
+    @marshal_with(order_fields)
+    def get(self, user, order_id):
+        order = OrderService.get_order(user, order_id)
         return order
 
 
@@ -129,6 +144,9 @@ api.add_resource(PlanPayResource, "/plans/<plan_id>/pay")
 api.add_resource(SubscriptionsResource, "/subscriptions")
 api.add_resource(SubscriptionResource, "/subscriptions/<subscription_id>")
 api.add_resource(SubscriptionPaymentResource, "/subscriptions/<subscription_id>/pay")
+
+api.add_resource(OrdersResource, "/orders")
+api.add_resource(OrderResource, "/orders/<order_id>")
 api.add_resource(OrderCancelResource, "/order/<order_id>/cancel")
 api.add_resource(OrderRefundResource, "/order/<order_id>/refund")
 api.add_resource(OrderSuccessResource, "/order/<order_id>/success")

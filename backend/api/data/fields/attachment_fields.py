@@ -4,7 +4,7 @@ from ...libs.helper import TimestampField
 
 attachment_fields = {
     "id": fields.String(attribute="id"),
-    "account_id": fields.String(attribute="account_id"),
+    "user_id": fields.String(attribute="user_id"),
     "container_id": fields.String(attribute="container_id"),
     "container_type": fields.String(attribute="container_type"),
     "filename": fields.String(attribute="filename"),

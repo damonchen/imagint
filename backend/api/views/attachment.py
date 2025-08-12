@@ -58,9 +58,9 @@ def upload_attachment():
     if not container_id or not container_type:
         return {"status": "error", "message": "container_id or container_type is empty"}
 
-    account = g.account
+    user = g.user
     attachemnt = AttachementService.save_attachment(
-        container_id, container_type, filename, file.read(), content_type, account.id
+        container_id, container_type, filename, file.read(), content_type, user.id
     )
 
     return {

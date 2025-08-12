@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <title>Account Registration</title>
+    <title>User Registration</title>
     <style>
       body {
         font-family: Arial, sans-serif;
@@ -39,12 +39,12 @@
       <h2>Welcome to Our Platform!</h2>
       <p>Hello,</p>
       <p>
-        Thank you for registering an account with us. To complete your
+        Thank you for registering an user with us. To complete your
         registration, please click the button below:
       </p>
 
       <a
-        href="{{ url_for('api.confirm_registration', token=token, account_id=account_id, _external=True) }}"
+        href="{{ url_for('api.confirm_registration', token=token, user_id=user_id, _external=True) }}"
         class="button"
       >
         Confirm Registration
@@ -52,13 +52,13 @@
 
       <p>Or copy and paste this link into your browser:</p>
       <p>
-        {{ url_for('api.confirm_registration', token=token,
-        account_id=account_id, _external=True) }}
+        {{ url_for('api.confirm_registration', token=token, user_id=user_id,
+        _external=True) }}
       </p>
 
       <p>This registration link will expire in 24 hours.</p>
 
-      <p>If you did not create an account, please ignore this email.</p>
+      <p>If you did not create an user, please ignore this email.</p>
 
       <div class="footer">
         <p>This email was sent to {{ email }}.</p>

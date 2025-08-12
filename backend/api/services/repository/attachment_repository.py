@@ -29,15 +29,16 @@ class AttachmentRepository(object):
             raise NotFoundError("Attachment not found")
         return attachment
 
-
     @staticmethod
     def load_attachments_by_file_ids(file_ids):
-        attachments = Attachement.query.filter_by(Attachement.file_id.in_(file_ids)).all()
+        attachments = Attachement.query.filter_by(
+            Attachement.file_id.in_(file_ids)
+        ).all()
         return attachments
 
     @staticmethod
     def create_attachment(
-        account,
+        user,
         file_id,
         original_name,
         storage_path,
@@ -52,7 +53,7 @@ class AttachmentRepository(object):
 
         attachment = Attachement(
             file_id=file_id,
-            account_id=account.id,
+            user_id=user.id,
             original_name=original_name,
             storage_path=storage_path,
             file_size=file_size,
@@ -60,8 +61,8 @@ class AttachmentRepository(object):
             digest=digest,
             description=description,
             status=status,
-            created_by=created_by or account.id,
-            updated_by=created_by or account.id,
+            created_by=created_by or user.id,
+            updated_by=created_by or user.id,
         )
 
         db.session.add(attachment)

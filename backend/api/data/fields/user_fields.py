@@ -1,10 +1,10 @@
 from flask_restful import fields
 from ...libs.helper import TimestampField
 
-account_fields = {
+user_fields = {
     "id": fields.Integer,
     "email": fields.String(),
-    "google_account_id": fields.String(),
+    "google_user_id": fields.String(),
     "username": fields.String,
     "avatar": fields.String(),
     "status": fields.String,
@@ -18,7 +18,7 @@ account_fields = {
     "updated_at": TimestampField,
 }
 
-account_partial_fields = {
+user_partial_fields = {
     "id": fields.Integer,
     "email": fields.String(),
     "username": fields.String,
@@ -26,29 +26,29 @@ account_partial_fields = {
     "status": fields.String,
 }
 
-account_pagination_fields = {
+user_pagination_fields = {
     "page": fields.Integer,
     "limit": fields.Integer(attribute="per_page"),
     "total": fields.Integer,
     "hasMore": fields.Boolean(attribute="has_next"),
-    "data": fields.List(fields.Nested(account_partial_fields), attribute="items"),
+    "data": fields.List(fields.Nested(user_partial_fields), attribute="items"),
 }
 
-list_account_fields = fields.List(fields.Nested(account_partial_fields))
+list_user_fields = fields.List(fields.Nested(user_partial_fields))
 
-account_password_reset_token_fields = {
+user_password_reset_token_fields = {
     "id": fields.Integer,
-    "account_id": fields.Integer,
+    "user_id": fields.Integer,
     "token": fields.String,
     "expires_at": TimestampField,
 }
 
-google_account_fields = {
+google_user_fields = {
     "id": fields.Integer,
     "email": fields.String,
     "username": fields.String(),
     "avatar": fields.String(),
-    "google_account_id": fields.String,
+    "google_user_id": fields.String,
     "created_by": fields.Integer,
     "created_at": TimestampField,
     "updated_by": fields.Integer,

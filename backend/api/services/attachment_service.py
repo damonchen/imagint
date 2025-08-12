@@ -90,7 +90,7 @@ class AttachementService(object):
 
     @staticmethod
     def upload_file(
-        account,
+        user,
         folder,
         file,
     ):
@@ -111,7 +111,7 @@ class AttachementService(object):
         print(f"content type {content_type}")
 
         attachment = AttachementService.save_attachment(
-            account,
+            user,
             file,
             folder,
             file_size,
@@ -122,7 +122,7 @@ class AttachementService(object):
 
     @staticmethod
     @transaction
-    def save_attachment(account, file, folder, file_size, mime_type):
+    def save_attachment(user, file, folder, file_size, mime_type):
 
         file_id = str(uuid.uuid4())
         ext = os.path.splitext(file.filename)[1]
@@ -136,7 +136,7 @@ class AttachementService(object):
             file_size = stat.st_size
 
         attachment = AttachmentRepository.create_attachment(
-            account,
+            user,
             file_id,
             file.filename,
             temp_path,
@@ -147,7 +147,7 @@ class AttachementService(object):
 
     @staticmethod
     @transaction
-    def move_to_permanent(account, file_id, perm_folder):
+    def move_to_permanent(user, file_id, perm_folder):
         """
         Move the attachment to the permanent folder.
         """
@@ -163,18 +163,18 @@ class AttachementService(object):
             attachment,
             storage_path=perm_path,
             status="permanent",
-            updated_by=account.id,
+            updated_by=user.id,
         )
 
     @staticmethod
     @transaction
-    def delete_attachment(account, file_id):
+    def delete_attachment(user, file_id):
         attachment = AttachmentRepository.load_attachment_by_file_id(file_id)
         if attachment is None:
             raise NotFoundError("File not found")
 
         return AttachmentRepository.update_attachment(
-            attachment, status="to_delete", updated_by=account.id
+            attachment, status="to_delete", updated_by=user.id
         )
 
     @staticmethod

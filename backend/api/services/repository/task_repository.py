@@ -7,17 +7,17 @@ from api.utils.uuid import generate_db_id
 class TaskRepository(object):
 
     @staticmethod
-    def create_task(account, payload, status=TaskStatus.PENDING.value):
+    def create_task(user, payload, status=TaskStatus.PENDING.value):
         """Create a new task"""
         task_id = generate_db_id()
         task = Task(
-            account_id=account.id,
+            user_id=user.id,
             task_id=task_id,
             payload=payload,
             result={},
             status=status,
-            created_by=account.id,
-            updated_by=account.id,
+            created_by=user.id,
+            updated_by=user.id,
         )
         db.session.add(task)
         db.session.flush()
@@ -35,11 +35,11 @@ class TaskRepository(object):
         return db.session.query(Task).filter(Task.task_id == task_id).first()
 
     @staticmethod
-    def list_tasks(account, status=None, page=1, per_page=10):
-        """List tasks for account"""
+    def list_tasks(user, status=None, page=1, per_page=10):
+        """List tasks for user"""
         offset = (page - 1) * per_page
         limit = per_page
-        query = db.session.query(Task).filter(Task.account_id == account.id)
+        query = db.session.query(Task).filter(Task.user_id == user.id)
         if status is not None:
             query = query.filter(Task.status == status)
 
@@ -52,10 +52,10 @@ class TaskRepository(object):
         return query.all(), query.count()
 
     @staticmethod
-    def update_task(task, account, status, result=None, done_at=None):
+    def update_task(task, user, status, result=None, done_at=None):
         """Update task status and result"""
         task.status = status
-        task.updated_by = account.id
+        task.updated_by = user.id
 
         if result is not None:
             task.result = result

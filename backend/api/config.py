@@ -41,7 +41,6 @@ DEFAULTS = {
     "WEAVIATE_GRPC_ENABLED": "True",
     "WEAVIATE_BATCH_SIZE": 100,
     "QDRANT_CLIENT_TIMEOUT": 20,
-    "CELERY_BACKEND": "database",
     "LOG_LEVEL": "INFO",
     "CLEAN_DAY_SETTING": 30,
     "UPLOAD_FILE_SIZE_LIMIT": 15,
@@ -230,10 +229,10 @@ class Config:
         self.S3_SECRET_KEY = get_env("S3_SECRET_KEY")
         self.S3_REGION = get_env("S3_REGION")
         self.S3_ADDRESS_STYLE = get_env("S3_ADDRESS_STYLE")
-        self.AZURE_BLOB_ACCOUNT_NAME = get_env("AZURE_BLOB_ACCOUNT_NAME")
-        self.AZURE_BLOB_ACCOUNT_KEY = get_env("AZURE_BLOB_ACCOUNT_KEY")
+        self.AZURE_BLOB_USER_NAME = get_env("AZURE_BLOB_USER_NAME")
+        self.AZURE_BLOB_USER_KEY = get_env("AZURE_BLOB_USER_KEY")
         self.AZURE_BLOB_CONTAINER_NAME = get_env("AZURE_BLOB_CONTAINER_NAME")
-        self.AZURE_BLOB_ACCOUNT_URL = get_env("AZURE_BLOB_ACCOUNT_URL")
+        self.AZURE_BLOB_USER_URL = get_env("AZURE_BLOB_USER_URL")
 
         # ------------------------
         # Vector Store Configurations.

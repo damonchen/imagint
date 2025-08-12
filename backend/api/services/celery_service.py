@@ -42,10 +42,10 @@
 #
 #
 # @celery_app.task
-# def send_register_token_mail(account, token):
+# def send_register_token_mail(user, token):
 #     from api.services.mail_service import MailService
 #
-#     MailService.send_register_token_mail(account, token)
+#     MailService.send_register_token_mail(user, token)
 #
 # @celery_app
 # def create_chat_message(chat_id, message_id, prompt, params):

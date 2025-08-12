@@ -30,10 +30,12 @@ chat_message_fields = {
     "params": fields.Raw(attribute="params"),
     "status": fields.String(attribute="status"),
     "imagePath": fields.String(attribute="image_path"),
-    "imageCount": fields.Integer(attribute="image_count"),
+    # "imageCount": fields.Integer(attribute="count"),
     "images": fields.List(fields.Nested(chat_message_image_fields)),
     "createdAt": TimestampField(attribute="created_at"),
 }
+
+list_chat_message_fields = fields.List(fields.Nested(chat_message_fields))
 
 
 page_chat_message_fields = {

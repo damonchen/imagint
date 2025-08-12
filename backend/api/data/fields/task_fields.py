@@ -4,7 +4,7 @@ from ...libs.helper import TimestampField
 task_fields = {
     "id": fields.Integer(attribute="id"),
     "task_id": fields.String(attribute="task_id"),
-    "account_id": fields.Integer(attribute="account_id"),
+    "user_id": fields.Integer(attribute="user_id"),
     "status": fields.String(attribute="status"),
     "payload": fields.Raw(attribute="payload"),
     "result": fields.Raw(attribute="result"),
@@ -18,7 +18,7 @@ task_fields = {
 partial_task_fields = {
     "id": fields.Integer(attribute="id"),
     "task_id": fields.String(attribute="task_id"),
-    "account_id": fields.Integer(attribute="account_id"),
+    "user_id": fields.Integer(attribute="user_id"),
     "status": fields.String(attribute="status"),
     "result": fields.Raw(attribute="result"),
     "done_at": TimestampField(attribute="done_at"),

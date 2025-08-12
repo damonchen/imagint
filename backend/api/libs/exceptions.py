@@ -20,7 +20,7 @@ class PrivKeyNotFoundError(Exception):
     pass
 
 
-class AccountLoginError(Exception):
+class UserLoginError(Exception):
     pass
 
 

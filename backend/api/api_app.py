@@ -25,7 +25,7 @@ from api.extensions import (
     wechat,
     # qrcode_api,
     limiter,
-    rabbitmq,
+    # rabbitmq,
 )
 
 from api.utils.decorator import api_json, debug_allowed
@@ -97,7 +97,7 @@ def initialize_extension(app):
         ("wechat", wechat),
         ("migrate", migrate),
         ("limiter", limiter),
-        ("rabbitmq", rabbitmq),
+        # ("rabbitmq", rabbitmq),
     ]
 
     for name, extension in extensions_to_init:
@@ -124,25 +124,25 @@ def close_extensions(app):
     logging.info("关闭扩展...")
 
     # 关闭Celery
-    try:
-        if "celery" in app.extensions:
-            celery_app = app.extensions["celery"]
-            # 使用新的关闭方法
-            if hasattr(celery_app, "shutdown"):
-                celery_app.shutdown()
-            elif hasattr(celery_app, "control"):
-                celery_app.control.shutdown()
-            logging.info("Celery已关闭")
-    except Exception as e:
-        logging.error(f"关闭Celery时出错: {e}")
+    # try:
+    #     if "celery" in app.extensions:
+    #         celery_app = app.extensions["celery"]
+    #         # 使用新的关闭方法
+    #         if hasattr(celery_app, "shutdown"):
+    #             celery_app.shutdown()
+    #         elif hasattr(celery_app, "control"):
+    #             celery_app.control.shutdown()
+    #         logging.info("Celery已关闭")
+    # except Exception as e:
+    #     logging.error(f"关闭Celery时出错: {e}")
 
     # 关闭RabbitMQ连接
-    try:
-        if hasattr(rabbitmq, "mq_proxy"):
-            rabbitmq.mq_proxy.close()
-            logging.info("RabbitMQ连接已关闭")
-    except Exception as e:
-        logging.error(f"关闭RabbitMQ时出错: {e}")
+    # try:
+    #     if hasattr(rabbitmq, "mq_proxy"):
+    #         rabbitmq.mq_proxy.close()
+    #         logging.info("RabbitMQ连接已关闭")
+    # except Exception as e:
+    #     logging.error(f"关闭RabbitMQ时出错: {e}")
 
     # 关闭Redis连接
     try:
@@ -166,7 +166,7 @@ def register_handler(app):
     from .extensions.login import login_manager
 
     @login_manager.request_loader
-    def load_account(request_from_flask_login):
+    def load_user(request_from_flask_login):
         auth_header = request.headers.get("Authorization", "")
         if request.blueprint == "console":
             pass

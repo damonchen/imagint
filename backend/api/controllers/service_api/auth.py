@@ -1,12 +1,14 @@
 import json
 import logging
+from flask import request
 from flask_restful import Resource, reqparse
-from api.libs.exceptions import AccountLoginError, NotFoundError
+from api.libs.exceptions import UserLoginError, NotFoundError
 from api.services.captcha_service import CaptchaService
-from api.services.errors.account import RegisterError
+from api.services.errors.user import RegisterError
 from api.extensions.redis import redis_client
-from api.controllers.common.errors import CreatedAccountError, AuthenticationError
-from api.services.account_service import AccountService
+from api.controllers.common.errors import CreatedUserError, AuthenticationError
+from api.services.user_service import UserService, UserLocationEvidenceService
+
 from . import api
 
 logger = logging.getLogger("web/auth")
@@ -52,31 +54,31 @@ class AuthPasswordRegister(Resource):
             invited_obj = redis_client.get(f"invite/{invited_code}")
             if not invited_obj:
                 # raise RegisterError("not validate error")
-                account_id = None
+                user_id = None
             else:
                 try:
                     invited_obj = json.loads(invited_obj)
-                    account_id = invited_obj["account_id"]
+                    user_id = invited_obj["user_id"]
                 except Exception as e:
-                    logger.warning("register account error occur for json loads", e)
-                    account_id = None
+                    logger.warning("register user error occur for json loads", e)
+                    user_id = None
         else:
-            account_id = None
+            user_id = None
 
         try:
-            account = AccountService.register(
+            user = UserService.register(
                 email=email,
                 username=username,
                 password=password,
-                invited_by=account_id,
+                invited_by=user_id,
                 language="zh-CN",
                 theme="light",
             )
         except RegisterError as e:
-            raise CreatedAccountError
+            raise CreatedUserError
 
-        if account is not None:
-            token = AccountService.get_account_jwt_token(account)
+        if user is not None:
+            token = UserService.get_user_jwt_token(user)
         else:
             token = None
 
@@ -99,15 +101,17 @@ class AuthPasswordLogin(Resource):
         password = args.password
 
         try:
-            account = AccountService.login(email, password)
-        except AccountLoginError as e:
-            logger.error("account login error %s", e)
+            user = UserService.login(email, password)
+        except UserLoginError as e:
+            logger.error("user login error %s", e)
             raise AuthenticationError()
 
-        if account is None:
-            raise NotFoundError("Account not found")
+        if user is None:
+            raise NotFoundError("User not found")
 
-        token = AccountService.get_account_jwt_token(account)
+        UserLocationEvidenceService.create_ip_evidence(user, request.remote_addr)
+
+        token = UserService.get_user_jwt_token(user)
 
         # return make_response(token, 200)
         return {
@@ -129,7 +133,7 @@ class AuthPasswordReset(Resource):
         args = parser.parse_args()
 
         email = args.email
-        AccountService.reset_password(email)
+        UserService.reset_password(email)
         return {}
 
 
@@ -142,10 +146,10 @@ class AuthPasswordResetConfirm(Resource):
 
         email = args.email
         password = args.password
-        account = AccountService.confirm_reset_password(email, password)
+        user = UserService.confirm_reset_password(email, password)
 
         return {
-            "access_token": AccountService.get_account_jwt_token(account),
+            "access_token": UserService.get_user_jwt_token(user),
         }
 
 
@@ -158,10 +162,10 @@ class AuthPasswordChange(Resource):
 
         email = args.email
         password = args.password
-        account = AccountService.change_password(email, password)
+        user = UserService.change_password(email, password)
 
         return {
-            "access_token": AccountService.get_account_jwt_token(account),
+            "access_token": UserService.get_user_jwt_token(user),
         }
 
 

@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta
+import datetime
 from dateutil.relativedelta import relativedelta
 
 from sqlalchemy.types import DECIMAL
@@ -9,6 +9,8 @@ from api.extensions.database import db
 from api.data.models.types import TimeStamp
 from api.utils.uuid import generate_db_id, generate_db_trade_no
 from api.data.models.enums import StrEnum
+
+from api.data.models.types import JSONType
 
 
 class PlanType(StrEnum):
@@ -22,30 +24,13 @@ class Plan(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(255), nullable=False)
-    price = db.Column(DECIMAL, nullable=False)
-    discount_amount = db.Column(DECIMAL, nullable=False)
-    month = db.Column(db.Integer, nullable=False)
-    created_by = db.Column(db.Integer, nullable=False)
-    created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
-    updated_by = db.Column(db.Integer, nullable=False)
-    updated_at = db.Column(
-        TimeStamp,
-        nullable=False,
-        server_default=func.now(),
-        server_onupdate=func.now(),
-    )
-
-
-class PlanFeature(db.Model):
-    __tablename__ = "plan_features"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    plan_id = db.Column(db.Integer, nullable=False)
-    feature = db.Column(
-        db.String(255), nullable=False
-    )  # 通常用类似 group.limit.count 这样的格式
-    description = db.Column(db.String(255), nullable=True)
-    order = db.Column(db.Integer, nullable=False, default=0)  # 排序
+    monthly_fee = db.Column(DECIMAL, nullable=False)  # 月费用
+    included_tokens = db.Column(db.Integer, nullable=False)  # 包含的令牌数
+    included_requests = db.Column(db.Integer, nullable=False)  # 包含的请求数
+    concurrency_limit = db.Column(db.Integer, nullable=False)  # 并发限制
+    extra_token_price = db.Column(DECIMAL, nullable=False)  # 超出令牌数的价格
+    extra_request_price = db.Column(DECIMAL, nullable=False)  # 超出请求
+    feature = db.Column(JSONType, nullable=True)  # 特性描述，通常是 JSON 字符串
 
     created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
@@ -65,13 +50,13 @@ class Subscription(db.Model):
 
     __table_args__ = (
         db.PrimaryKeyConstraint("id", name="subscription_pkey"),
-        db.Index("subscription_account_idx", "account_id"),
+        db.Index("subscription_user_idx", "user_id"),
     )
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    account_id = db.Column(db.Integer, nullable=False)
-    plan_type = db.Column(db.String(26), nullable=False)  # 订阅类型， PlanType
+    user_id = db.Column(db.Integer, nullable=False)
     plan_id = db.Column(db.Integer, nullable=False)
+
     started_at = db.Column(
         TimeStamp, nullable=False, server_default=func.now()
     )  # 订阅起始时间
@@ -79,10 +64,9 @@ class Subscription(db.Model):
         TimeStamp, nullable=False, server_default=func.now()
     )  # 订阅结束时间
     status = db.Column(
-        db.String(32), nullable=False, default="pending"
-    )  # pending, active, expired, cancelled
-
-    order_id = db.Column(db.String(26), nullable=False)  # 订单？
+        db.String(32), nullable=False, default="active"
+    )  # active, expired, cancelled
+    auto_renew = db.Column(db.Boolean, nullable=False, default=True)  # 是否自动续订
 
     created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
@@ -95,12 +79,12 @@ class Subscription(db.Model):
     )
 
     def has_expired(self):
-        now = datetime.now(datetime.UTC)
+        now = datetime.datetime.now(datetime.UTC)
         return now > self.ended_at
 
     def is_nearest_expired(self, days=15):
-        now = datetime.now(datetime.UTC)
-        next = now + timedelta(days=days)
+        now = datetime.datetime.now(datetime.UTC)
+        next = now + datetime.timedelta(days=days)
         return next > self.ended_at
 
 
@@ -110,24 +94,17 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
 
-    account_id = db.Column(db.Integer, nullable=False)
+    user_id = db.Column(db.Integer, nullable=False)
     subscription_id = db.Column(db.Integer, nullable=False)
 
-    # 订单编号
-    trade_no = db.Column(db.String(42), default=generate_db_trade_no)
-
-    payment_channel = db.Column(db.String(32), nullable=True)  # 支付渠道
-
-    # 订单金额
-    amount = db.Column(DECIMAL, nullable=False)
-    # 折扣费用
-    discount_amount = db.Column(DECIMAL, nullable=False)
-    # 支付金额
-    paid_amount = db.Column(DECIMAL, nullable=False)
-
-    # 订单状态
-    status = db.Column(db.String(32), nullable=False, default="pending")
-    payment_at = db.Column(TimeStamp, nullable=True)  # 支付时间
+    # 下单时间
+    order_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
+    total_amount = db.Column(DECIMAL, nullable=False)  # 订单总金额
+    currency = db.Column(db.String(16), nullable=False, default="USD")  # 货币类型
+    tax_rate = db.Column(DECIMAL(5, 2), nullable=False, default=0.0)  # 税率
+    status = db.Column(
+        db.String(32), nullable=False, default="pending"
+    )  # pending, confirmed, processing, shipped, completed, cancelled, refunded
 
     created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
