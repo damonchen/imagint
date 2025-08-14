@@ -4,7 +4,7 @@ import time
 import uuid
 from urllib.parse import urlencode
 from flask import current_app
-from flask_restful import marshal_with, reqparse
+from flask_restful import marshal_with, reqparse, abort
 from flask import stream_with_context
 
 from api.data.fields.task_fields import partial_task_fields
@@ -13,7 +13,7 @@ from api.services.chat_service import (
     ChatMessageService,
     ChatMessageImageService,
 )
-from api.data.fields.chat import (
+from api.data.fields.chat_fields import (
     page_chat_fields,
     chat_fields,
     page_chat_message_fields,
@@ -23,6 +23,8 @@ from api.data.fields.chat import (
 )
 from api.libs.sign_url import encrypt_id, sign_url
 from api.libs.image_url import ImageURLBuilder
+from api.libs.response import make_response
+from api.libs.decorator import unified_response
 
 from . import api
 from .wraps import WebApiResource
@@ -32,7 +34,7 @@ logger = logging.getLogger(__name__)
 
 class ChatsResource(WebApiResource):
 
-    @marshal_with(page_chat_fields)
+    @unified_response(page_chat_fields)
     def get(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("page", type=int, location="args", default=1)
@@ -44,9 +46,9 @@ class ChatsResource(WebApiResource):
 
         chats = ChatService.get_chats_by_page(user, page=page, page_size=per_page)
 
-        return chats
+        return make_response(chats)
 
-    @marshal_with(chat_fields)
+    @unified_response(chat_fields)
     def post(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("prompt", type=str, location="json", default="")
@@ -54,27 +56,27 @@ class ChatsResource(WebApiResource):
 
         prompt = args.prompt
 
-        return ChatService.create_chat(user, prompt)
+        return make_response(ChatService.create_chat(user, prompt))
 
 
 class ChatResource(WebApiResource):
 
-    @marshal_with(chat_fields)
+    @unified_response(chat_fields)
     def get(self, user, chat_id):
         chat = ChatService.get_chat(user, chat_id)
-        return chat
+        return make_response(chat)
 
 
 class CurrentChatResource(WebApiResource):
-    @marshal_with(chat_fields)
+    @unified_response(chat_fields)
     def get(self, user):
         chat = ChatService.get_latest_chat(user)
-        return chat
+        return make_response(chat)
 
 
 class ChatMessagesResource(WebApiResource):
 
-    @marshal_with(chat_message_fields)
+    @unified_response(chat_message_fields)
     def get(self, user, chat_id):
         parser = reqparse.RequestParser()
         args = parser.parse_args()
@@ -82,9 +84,9 @@ class ChatMessagesResource(WebApiResource):
         chat_messages = ChatMessageService.get_chat_messages(user, chat_id)
         logger.info("chat messages %s", chat_messages)
 
-        return chat_messages
+        return make_response(chat_messages)
 
-    @marshal_with(chat_message_fields)
+    @unified_response(chat_message_fields)
     def post(self, user, chat_id):
         parser = reqparse.RequestParser()
         parser.add_argument("prompt", type=str, location="json", required=True)
@@ -95,16 +97,21 @@ class ChatMessagesResource(WebApiResource):
         params = args.params
         count = params.get("count", 1)
 
-        chat_message = ChatMessageService.create_messages(
-            user, chat_id, prompt, params, count
-        )
+        try:
+            chat_message = ChatMessageService.create_messages(
+                user, chat_id, prompt, params, count
+            )
+        except Exception as e:
+            logger.error("create chat message error: %s", e)
+            # abort(500, message="Internal server error")
+            return make_response(status="limit", message=str(e))
 
-        return chat_message
+        return make_response(chat_message)
 
 
 class ChatMessageImageResource(WebApiResource):
 
-    @marshal_with(chat_message_image_fields)
+    @unified_response(chat_message_image_fields)
     def get(self, user, chat_id, message_id):
         # chat_message = ChatMessageService.get_chat_message(user, chat_id, message_id)
 
@@ -125,17 +132,17 @@ class ChatMessageImageResource(WebApiResource):
             r["id"] = str(uuid.uuid4())
             result.append(r)
 
-        return result
+        return make_response(result)
 
 
 class ChatMessageResource(WebApiResource):
 
-    @marshal_with(chat_message_fields)
+    @unified_response(chat_message_fields)
     def get(self, user, chat_id, message_id):
         chat_message = ChatMessageService.get_chat_message(user, chat_id, message_id)
-        return chat_message
+        return make_response(chat_message)
 
-    @marshal_with(chat_message_fields)
+    @unified_response(chat_message_fields)
     def post(self, user, chat_id, message_id):
         parser = reqparse.RequestParser()
         parser.add_argument("prompt", type=str, location="json", required=True)
@@ -148,7 +155,7 @@ class ChatMessageResource(WebApiResource):
         ims = ChatMessageService.create_messages(
             user, chat_id, message_id, prompt, params
         )
-        return ims
+        return make_response(ims)
 
 
 api.add_resource(ChatsResource, "/chats")

@@ -14,3 +14,4 @@ from . import subscription
 from . import task
 from . import file
 from . import transaction
+from . import credit

@@ -9,34 +9,36 @@ from api.services.user_service import UserService
 
 from . import api
 from .wraps import WebApiResource
+from api.libs.decorator import unified_response
+from api.libs.response import make_response
 
 
 class UsersResource(WebApiResource):
     # 越是基础的，越需要放到最后面，这个是实现依赖
 
     @manager_required
-    @marshal_with(list_user_fields)
+    @unified_response(list_user_fields)
     def get(self, user):
         users = UserService.load_users()
-        return users
+        return make_response(users)
 
 
 class UserResource(WebApiResource):
 
     @manager_required
-    @marshal_with(user_partial_fields)
+    @unified_response(user_partial_fields)
     def get(self, user, pk):
         user = UserService.load_user(pk)
-        return user
+        return make_response(user)
 
 
 class UserSelfResource(WebApiResource):
 
-    @marshal_with(user_partial_fields)
+    @unified_response(user_partial_fields)
     def get(self, user):
-        return user
+        return make_response(user)
 
-    @marshal_with(user_partial_fields)
+    @unified_response(user_partial_fields)
     def put(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("username", type=str, location="json")
@@ -46,10 +48,12 @@ class UserSelfResource(WebApiResource):
         username = args.username
         password = args.password
 
-        return UserService.change_password(
-            user,
-            username=username,
-            password=password,
+        return make_response(
+            UserService.change_password(
+                user,
+                username=username,
+                password=password,
+            )
         )
 
 

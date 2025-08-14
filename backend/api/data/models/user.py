@@ -40,6 +40,10 @@ class User(db.Model):
         server_onupdate=func.now(),
     )
 
+    # Credit relationships
+    credit = db.relationship("UserCredit", back_populates="user", uselist=False)
+    credit_transactions = db.relationship("CreditTransaction", back_populates="user")
+
     def set_password(self, password):
         """Set password with auto-generated salt for the user."""
         salt = generate_password_salt()
@@ -72,6 +76,24 @@ class User(db.Model):
     @property
     def is_not_valid(self):
         return self.is_banned or self.is_closed
+
+    def get_credit_balance(self):
+        """获取用户credit余额"""
+        if not self.credit:
+            return 0
+        return self.credit.balance
+
+    def can_generate_image(self, image_count: int = 1) -> bool:
+        """检查用户是否有足够的credit生成图片"""
+        if not self.credit:
+            return False
+        return self.credit.can_generate_image(image_count)
+
+    def consume_credits_for_image(self, image_count: int = 1) -> bool:
+        """消费credit生成图片"""
+        if not self.credit:
+            return False
+        return self.credit.consume_credits(image_count)
 
 
 class Account(db.Model):

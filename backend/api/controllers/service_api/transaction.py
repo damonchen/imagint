@@ -15,11 +15,13 @@ from api.services.transaction_service import (
     RefundService,
     OrderService,
 )
+from api.libs.decorator import unified_response
+from api.libs.response import make_response
 
 
 class TransactionCallbackResource(Resource):
 
-    @marshal_with(transaction_fields)
+    @unified_response(transaction_fields)
     def post(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("order", type=int, location="json")
@@ -38,31 +40,32 @@ class TransactionCallbackResource(Resource):
         transaction = TransactionService.create_transaction(
             user, order_id, type, amount, currency, payment_channel
         )
-        return transaction
+        return make_response(transaction)
 
 
 class TransactionsResource(WebApiResource):
 
-    @marshal_with(transaction_fields)
+    @unified_response(transaction_fields)
     def get(self, user):
         # parser = reqparse.RequestParser()
+        # parser.add_argument("type", type=str, location="json")
         # args = parser.parse_args()
 
         transactions = TransactionService.list_transactions(user)
-        return transactions
+        return make_response(transactions)
 
 
 class TransactionResource(WebApiResource):
 
-    @marshal_with(transaction_fields)
+    @unified_response(transaction_fields)
     def get(self, user, transaction_id):
         transaction = TransactionService.load_transaction(user, transaction_id)
-        return transaction
+        return make_response(transaction)
 
 
 class RefundsResource(WebApiResource):
 
-    @marshal_with(refund_fields)
+    @unified_response(refund_fields)
     def post(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument(
@@ -76,19 +79,20 @@ class RefundsResource(WebApiResource):
 
         refund = RefundService.create_refund(user, payment_order_id, reason=reason)
 
-        return refund
+        return make_response(refund)
 
 
 class RefundResource(WebApiResource):
 
-    @marshal_with(refund_fields)
+    @unified_response(refund_fields)
     def get(self, user, refund_id):
-        RefundService.load_refund(user, refund_id)
+        refund = RefundService.load_refund(user, refund_id)
+        return make_response(refund)
 
 
 class RefundStatusResource(WebApiResource):
 
-    @marshal_with(refund_fields)
+    @unified_response(refund_fields)
     def post(self, user, refund_id):
         parser = reqparse.RequestParser()
         parser.add_argument("status", type=str, required=True, location="json")
@@ -96,7 +100,8 @@ class RefundStatusResource(WebApiResource):
 
         status = args.status
 
-        return RefundService.update_refund_status(user, refund_id, status)
+        refund = RefundService.update_refund_status(user, refund_id, status)
+        return make_response(refund)
 
 
 api.add_resource(TransactionsResource, "/transactions")

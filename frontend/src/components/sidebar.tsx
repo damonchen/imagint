@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { IconChevronsLeft, IconMenu2, IconReceipt, IconSettings, IconX } from '@tabler/icons-react'
+import { IconChevronsLeft, IconLogout, IconMenu2, IconReceipt, IconSettings, IconX } from '@tabler/icons-react'
 import { Layout, LayoutHeader } from './custom/layout'
 import { Button } from './custom/button'
 import Nav from './nav'
 import { cn } from '@/lib/utils'
 import { sidelinks } from '@/data/sidelinks'
 import { useSelf } from '@/provider/self-user-provider'
+import { useAuthStore } from '@/store/auth'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useNavigate } from 'react-router-dom'
 
 interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
@@ -22,6 +23,8 @@ export default function Sidebar2({
 }: SidebarProps) {
   const [navOpened, setNavOpened] = useState(false)
   const { user } = useSelf();
+
+  const { clearToken } = useAuthStore();
 
   const navigate = useNavigate();
 
@@ -123,12 +126,12 @@ export default function Sidebar2({
                       <AvatarImage src={user.avatar} alt={user.name} />
                     ) : (
                       <AvatarFallback>
-                        {user?.name?.charAt(0) || "U"}
+                        {user?.username?.charAt(0) || "U"}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   <span className={`truncate text-sm ${isCollapsed ? 'hidden' : 'block'}`}>
-                    {user?.name || "User"}
+                    {user?.username || "User"}
                   </span>
                 </Button>
               </DropdownMenuTrigger>
@@ -141,7 +144,20 @@ export default function Sidebar2({
                   <IconReceipt className="mr-2 h-4 w-4" />
                   <span>Billing</span>
                 </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem onClick={() => {
+                  clearToken();
+                  localStorage.removeItem('token')
+                  window.location.href = '/'
+                }}>
+                  <IconLogout className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+
               </DropdownMenuContent>
+
             </DropdownMenu>
           </div>
         </div>

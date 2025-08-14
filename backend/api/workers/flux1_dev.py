@@ -8,6 +8,8 @@ from typing import Dict, Any
 
 import modal
 
+TEMP_PATH = '/tmp'
+
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("git", "gcc")
@@ -67,9 +69,10 @@ class Inference(object):
 
     @modal.method()
     def run(
-        self, prompt: str, ratio: str = "16:9", batch_size: int = 4, seed: int = None
+        self, prompt: str, ratio: str = "16:9", batch_size: int = 4, seed: int = None, steps: int=None
     ):
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
+        steps = steps if steps else 30
 
         # 支持多种宽高比
         aspect_ratios = {
@@ -88,7 +91,7 @@ class Inference(object):
             width=width,
             height=height,
             guidance_scale=3.5,
-            num_inference_steps=50,
+            num_inference_steps=steps,
             max_sequence_length=512,
             generator=torch.Generator(device=self.device).manual_seed(seed),
         ).images
@@ -116,24 +119,62 @@ class Inference(object):
 #     sys.stdout.flush()
 
 
-@app.local_entrypoint()
-def main(prompt, ratio="16:9", batch_size=4, seed=None):
-    # ratio = "16:9"
-    # batch_size = 4
-    # seed = None
-    # prompt = "A cat holding a sign that says hello world"
+# @app.local_entrypoint()
+# def main(prompt, ratio="16:9", batch_size=4, seed=None):
+#     # ratio = "16:9"
+#     # batch_size = 4
+#     # seed = None
+#     # prompt = "A cat holding a sign that says hello world"
 
-    images = Inference().run.remote(prompt, ratio, batch_size=batch_size, seed=seed)
+#     images = Inference().run.remote(prompt, ratio, batch_size=batch_size, seed=seed)
 
-    file_paths = []
-    prefix = str(uuid.uuid4())[:4]
-    # output_dir = '.'
-    for i, image in enumerate(images):
-        v = str(uuid.uuid4())
-        output_path = f"images/{prefix}_{i}_{v}.png"
-        image.save(output_path)
-        # output_path.write_bytes(image_bytes)
+#     file_paths = []
+#     prefix = str(uuid.uuid4())[:4]
+#     # output_dir = '.'
+#     for i, image in enumerate(images):
+#         v = str(uuid.uuid4())
+#         output_path = f"images/{prefix}_{i}_{v}.png"
+#         image.save(output_path)
+#         # output_path.write_bytes(image_bytes)
 
-        file_paths.append(output_path)
+#         file_paths.append(output_path)
 
-    print(json.dumps(file_paths))
+#     print(json.dumps(file_paths))
+
+
+@app.function()
+async def run(prompt, ratio, batch_size, seed):
+    images = Inference().run.remote(prompt, ratio, batch_size, seed)
+    return images
+
+
+def main():
+    # 执行任务
+    data = sys.stdin.read().strip()
+    data = json.loads(data)
+    with open(os.path.join(TEMP_PATH, "flux_modal.txt"), "w") as fp:
+        fp.write(json.dumps(data, indent=4, ensure_ascii=False))
+
+    prompt, ratio, batch_size, seed, steps = (
+        data["prompt"],
+        data["ratio"],
+        data["batch_size"],
+        data["seed"],
+        data.get("steps", 30),
+    )
+    with app.run():
+        images = Inference().run.remote(prompt, ratio, batch_size, seed, steps=steps)
+        print("------------------------------")
+
+        file_paths = []
+        for i, image in enumerate(images):
+            filename = str(uuid.uuid4())
+            output_path = os.path.join(TEMP_PATH, f"{filename}.png")
+            image.save(output_path)
+            file_paths.append(output_path)
+
+        print(json.dumps({"images": file_paths}))
+
+
+if __name__ == "__main__":
+    main()

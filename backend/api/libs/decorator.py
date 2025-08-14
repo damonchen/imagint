@@ -1,6 +1,9 @@
 import logging
 from functools import wraps
+from typing import Union
+
 from flask import g, make_response, request, session, redirect
+from flask_restful import fields, marshal
 from api.services.user_service import UserService
 from api.extensions.login import token_coder
 
@@ -92,3 +95,28 @@ def openid_required(func):
         return func(*args, **kwargs)
 
     return wrapper
+
+
+# 这是所有 API 公用的外层结构
+base_response_fields = {
+    "status": fields.String,  # ok / limit / error
+    "message": fields.String,  # 提示信息
+    "data": Union[fields.Raw, fields.Nested],  # 子结构（每个 API 自己定义）
+}
+
+
+def unified_response(data_fields):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            resp = func(*args, **kwargs)
+            fields_copy = base_response_fields.copy()
+            fields_copy["data"] = fields.Nested(data_fields, allow_null=True)
+
+            logger.info("fields copy info %s == %s", fields_copy, resp )
+
+            return marshal(resp, fields_copy)
+
+        return wrapper
+
+    return decorator

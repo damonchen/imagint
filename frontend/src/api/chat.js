@@ -1,35 +1,39 @@
 import { authApi } from '@/lib/api'
 
 export async function createChat(prompt) {
-  return authApi.post('/chats', {
-    prompt,
-  })
+  const response = await authApi.post('/chats', { prompt })
+  return response.data
 }
 
 export async function getCurrentChat() {
-  return authApi.get('/chats/current')
+  const response = await authApi.get('/chats/current')
+  return response.data
 }
 
 export async function getChatMessages(chatId) {
-  return authApi.get(`/chats/${chatId}/messages`)
+  const response = await authApi.get(`/chats/${chatId}/messages`)
+  return response.data
 }
 
 export async function createChatMessage(chatId, prompt, promptParams) {
-  return authApi.post(`/chats/${chatId}/messages`, {
+  const response = await authApi.post(`/chats/${chatId}/messages`, {
     prompt,
     params: promptParams,
   })
+  return response.data
 }
 
 export async function getChatMessage(chatId, messageId) {
-  return authApi.get(`/chats/${chatId}/messages/${messageId}`)
+  const response = await authApi.get(`/chats/${chatId}/messages/${messageId}`)
+  return response.data
 }
 
 export async function getChats(page, pageSize) {
-  return authApi.get('/chats', {
+  const response = await authApi.get('/chats', {
     params: {
       page,
       pageSize,
     },
   })
+  return response.data
 }

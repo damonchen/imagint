@@ -10,6 +10,7 @@ from typing import List
 from .repository.task_repository import TaskRepository
 from .task_service import TaskService
 from .redis_service import RedisService
+from .credit_service import CreditService
 from api.extensions.database import transaction
 from .repository.attachment_repository import AttachmentRepository
 from .repository.chat_repository import (
@@ -71,6 +72,16 @@ class ChatMessageService(object):
         params: dict,
         count: int,
     ) -> ChatMessage:
+        # 检查用户是否有足够的credit生成图片
+        if not CreditService.check_user_can_generate_image(user, count):
+            raise ValueError(
+                f"Insufficient credits. You need {count * 4} credits to generate {count} images."
+            )
+
+        # 消费credit
+        if not CreditService.consume_credits_for_image_generation(user, count):
+            raise ValueError("Failed to consume credits. Please try again.")
+
         message = ChatMessageRepository.create_message(
             user, chat_id, prompt, params, count
         )
@@ -133,7 +144,29 @@ class ChatMessageService(object):
 
     @staticmethod
     def get_chat_message(user: User, chat_id: str, message_id: str) -> ChatMessage:
-        return ChatMessageRepository.get_chat_message(user, chat_id, message_id)
+        message = ChatMessageRepository.get_chat_message(user, chat_id, message_id)
+
+        if message and message.status == "success":
+            # 获取该消息的图片
+            images = ChatMessageImageService.get_images(user, message_id)
+
+            # 构建图片URL
+            prefix = "/image"
+            builder = ImageURLBuilder()
+            expire = int(time.time()) + 3600
+
+            new_images = []
+            for image in images:
+                urls = builder.build_image_url(prefix, image, expire)
+                item = image.to_dict()
+                item["id"] = str(uuid.uuid4())
+                item.update(urls)
+                new_images.append(item)
+
+            # 将图片数据添加到消息对象
+            message.images = new_images
+
+        return message
 
     @staticmethod
     def delete_message(user: User, message_id: int) -> bool:

@@ -1,7 +1,7 @@
 import logging
 import os
-from flask import request, current_app, send_file, abort
-from flask_restful import marshal_with
+from flask import request, current_app, send_file
+from flask_restful import marshal_with, abort
 from werkzeug.datastructures.file_storage import FileStorage
 
 from . import api
@@ -17,6 +17,8 @@ from api.data.fields.file_fields import list_attachment_file_fields
 from api.services.errors.file import FileTooLargeError, UnsupportedFileTypeError
 from api.services.attachment_service import AttachementService
 from api.libs.url import get_file_url
+from api.libs.decorator import unified_response
+from api.libs.response import make_response
 
 logger = logging.getLogger(__name__)
 
@@ -26,11 +28,11 @@ def get_attachment(file_id):
     try:
         file = AttachementService.load_attachment_by_file_id(file_id)
         if not file:
-            abort(404)
+            abort(404, message="File not found")
 
         # Check if file exists on disk
         if not os.path.exists(file.storage_path):
-            abort(404)
+            abort(404, message="File not found")
 
         return send_file(
             file.storage_path,
@@ -41,19 +43,21 @@ def get_attachment(file_id):
 
     except Exception as e:
         logger.error(f"Error getting attachment: {e}")
-        abort(500)
+        abort(500, message="Internal server error")
 
 
 class FileApi(WebApiResource):
 
-    @marshal_with(list_attachment_file_fields)
+    @unified_response(list_attachment_file_fields)
     def post(self, user):
         print("file upload api", request.files)
         if "files" not in request.files:
-            raise NoFileUploadedError
+            return make_response(status="fail", message="No file uploaded")
+            # raise NoFileUploadedError
 
         if len(request.files) > 1:
-            raise TooManayFilesError()
+            return make_response(status="fail", message="Too many files uploaded")
+            # raise TooManayFilesError()
 
         files = request.files["files"]
         temp_folder = current_app.config.get("UPLOAD_TEMP_FOLDER", "/tmp")
@@ -78,9 +82,11 @@ class FileApi(WebApiResource):
                     )
                     uploaded_files.append(uploaded_file)
         except FileTooLargeError as error:
-            raise FileTooLargeError(error.description)
+            return make_response(status="fail", message=error.description)
+            # raise FileTooLargeError(error.description)
         except UnsupportedFileTypeError:
-            raise UnsupportedFileTypeError()
+            return make_response(status="fail", message="Unsupported file type")
+            # raise UnsupportedFileTypeError()
 
         uploaded_files_with_url = []
         for file in uploaded_files:
@@ -92,7 +98,7 @@ class FileApi(WebApiResource):
             )
 
         # Return a dictionary with items key to match the field definition
-        return {"items": uploaded_files_with_url}
+        return make_response(data={"items": uploaded_files_with_url})
         # return {
         #     'items': uploaded_files,
         # }
@@ -104,7 +110,9 @@ class FileConfigApi(WebApiResource):
     def post(self, user, file_id):
         AttachementService.move_to_permanent(user, file_id)
 
-        return {"message": "File config updated", "status": "confirmed"}, 200
+        return make_response(
+            data={"message": "File config updated", "status": "confirmed"}
+        )
 
 
 class FileCancelApi(WebApiResource):
@@ -112,7 +120,9 @@ class FileCancelApi(WebApiResource):
     def post(self, user, file_id):
         AttachementService.delete_attachment(user, file_id)
 
-        return {"message": "File config updated", "status": "cancelled"}, 200
+        return make_response(
+            data={"message": "File config updated", "status": "cancelled"}
+        )
 
 
 api.add_resource(FileApi, "/files/upload")

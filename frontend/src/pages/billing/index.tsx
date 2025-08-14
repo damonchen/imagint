@@ -13,34 +13,28 @@ import {
 } from "@/components/ui/table"
 import { useQuery } from '@tanstack/react-query'
 
-import { getBilling } from '@/api/transaction'
+import { getSubscription } from '@/api/transaction'
 
 // import { Search } from '@/components/search'
 // import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 // import ThemeSwitch from '@/components/theme-switch'
 
 export default function Billing() {
-    const [billings, setBillings] = useState([]);
+    // const [subscriptions, setBillings] = useState([]);
 
-    const { data: billingData } = useQuery({
-        queryKey: ['billing'],
-        queryFn: getBilling,
-    })
+    // const { data: billingData } = useQuery({
+    //     queryKey: ['subscription'],
+    //     queryFn: getSubscription,
+    // })
 
-    console.log('billing data', billingData);
+    // console.log('billing data', billingData);
 
-    // data billing info
+    // // data billing info
 
     return (
         <Layout>
             <LayoutBody className='space-y-4'>
-                {
-                    billings.map((billing) => {
-                        return <div key={billing.id}>
-                            aaaaaaaaaaa
-                        </div>
-                    })
-                }
+                <div>billing</div>
             </LayoutBody>
         </Layout>
     )

@@ -30,7 +30,7 @@ class LocalStorage(object):
     def save(self, filename, data):
         filename = os.path.join(self.folder, filename)
         folder = os.path.dirname(filename)
-        os.makedirs(folder, 0o755, exist_ok=True)
+        os.makedirs(folder, 0o755, exist_status=True)
 
         with open(filename, "wb") as fp:
             fp.write(data)

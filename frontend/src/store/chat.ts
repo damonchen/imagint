@@ -16,7 +16,7 @@ export interface Message {
   prompt: string;
   params: any;
   images: Image[];
-  status: 'idle' | 'running' | 'success' | 'failed';
+  status: 'idle' | 'running' | 'processing' | 'pending' | 'success' | 'failed';
   count: number;
   type: 'text2image' | 'image2image' | 'text2video' | 'image2video';
   ratio: '1:1' | '16:9' | '4:3';
