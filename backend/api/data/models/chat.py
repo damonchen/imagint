@@ -24,7 +24,7 @@ class ChatMessage(db.Model):
     __table_args__ = (Index("uix_chat", "chat_id"),)
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    chat_id = Column(String(64), nullable=False)
+    chat_id = Column(db.Integer, nullable=False)
     user_id = Column(Integer, nullable=False)
     type = Column(String(32), default="text")  # text, image, etc.
     prompt = Column(Text)  # image path，储存的是attachment中的file_id的列表？

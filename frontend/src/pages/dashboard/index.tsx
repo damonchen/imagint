@@ -8,13 +8,13 @@ import { Textarea } from '@/components/ui/textarea'
 import { useCurrentChatStore } from '@/store/chat'
 import type { Image, Message } from '@/store/chat'
 import { createChat, createChatMessage, getChatMessage, getChatMessages, getCurrentChat } from '@/api/chat'
-import { getUserCredits } from '@/api/credit'
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { getStorage, setStorage, removeStorage } from '@/storage'
 import { useToast } from '@/hooks/use-toast'
 import { ApiResponseWrapper } from '@/lib/api'
 import { CreditInfo } from '@/components/credit-info'
+import { useUserStore } from '@/store/user'
 
 // Image Viewer Modal Component
 const ImageViewer = ({
@@ -184,10 +184,10 @@ const ChatMessage = ({ message, onMessageEdit, onMessageGenerate }: { message: M
         </div>
         <div className="flex items-center gap-4 text-sm text-gray-600">
             <Button variant="outline" className="flex items-center gap-1 cursor-pointer" onClick={() => { console.log('on click',); onMessageEdit(message) }}>
-                重新编辑
+                Reedit
             </Button>
             <Button variant="outline" className="flex items-center gap-1" onClick={() => onMessageGenerate(message)}>
-                再次生成
+                Generate Again
             </Button>
         </div>
 
@@ -235,6 +235,7 @@ export default function Dashboard() {
     const [isGenerating, setIsGenerating] = useState(false);
     const queryClient = useQueryClient()
     const { toast } = useToast()
+    const { credit: creditInfo } = useUserStore();
 
     // 获取当前chat
     const { data: chatData } = useQuery({
@@ -242,16 +243,11 @@ export default function Dashboard() {
         queryFn: getCurrentChat,
     })
 
-    // 获取用户credit信息
-    const { data: creditInfo } = useQuery({
-        queryKey: ['userCredits'],
-        queryFn: getUserCredits,
-        refetchOnWindowFocus: false,
-    })
-
     useEffect(() => {
         if (chatData) {
-            setChat(chatData);
+            console.log('chat data is', chatData);
+            const chat = chatData.data
+            setChat(chat);
         }
     }, [chatData, setChat])
 
@@ -264,7 +260,11 @@ export default function Dashboard() {
 
     useEffect(() => {
         if (chatMessages) {
-            setMessages(chatMessages)
+            console.log('chat message is', chatMessages);
+
+            // 由于拦截器已经处理了数据提取，chatMessages就是实际的数据
+            const messages = chatMessages.data || []
+            setMessages(messages)
         }
     }, [chatMessages, setMessage])
 
@@ -332,9 +332,9 @@ export default function Dashboard() {
     useEffect(() => {
         // 从服务器中获取最近的一次生成对象？一直保持用这一次的对象？
         console.log('chat', chat)
-        // if (chat) {
-        queryClient.invalidateQueries({ queryKey: ['chatMessages', chat.id] })
-        // }
+        if (chat) {
+            queryClient.invalidateQueries({ queryKey: ['chatMessages', chat.id] })
+        }
     }, [queryClient, chat])
 
     useEffect(() => {
@@ -354,19 +354,19 @@ export default function Dashboard() {
     });
 
     // Test function to verify API calls
-    const testApiCall = async (chatId: string, messageId: string) => {
-        try {
-            console.log(`🧪 Testing API call to getChatMessage...`);
-            console.log(`🔗 URL: ${import.meta.env.VITE_PUBLIC_API_URL}/chats/${chatId}/messages/${messageId}`);
+    // const testApiCall = async (chatId: string, messageId: string) => {
+    //     try {
+    //         console.log(`🧪 Testing API call to getChatMessage...`);
+    //         console.log(`🔗 URL: ${import.meta.env.VITE_PUBLIC_API_URL}/chats/${chatId}/messages/${messageId}`);
 
-            const result = await getChatMessage(chatId, messageId);
-            console.log(`✅ Test API call successful:`, result);
-            return true;
-        } catch (error) {
-            console.error(`❌ Test API call failed:`, error);
-            return false;
-        }
-    };
+    //         const result = await getChatMessage(chatId, messageId);
+    //         console.log(`✅ Test API call successful:`, result);
+    //         return true;
+    //     } catch (error) {
+    //         console.error(`❌ Test API call failed:`, error);
+    //         return false;
+    //     }
+    // };
 
     const onMessageGenerate = async () => {
         if (!prompt.trim() || isGenerating) return;
@@ -384,46 +384,64 @@ export default function Dashboard() {
             let chatId = chat?.id;
             if (!chatId) {
                 console.log(`💬 No existing chat, creating new chat...`);
-                const newChat = await createChat(prompt)
-                console.log(`✅ New chat created:`, newChat);
+                const chatResp = await createChat(prompt)
+                console.log(`✅ New chat created:`, chatResp);
+                const newChat = chatResp.data;
                 setChat(newChat);
                 chatId = newChat.id
             } else {
                 console.log(`💬 Using existing chat:`, chatId);
             }
 
-            console.log(`📡 Creating chat message with chatId: ${chatId}`);
-            const message = await createChatMessage(chatId, prompt, params);
-            console.log(`✅ Message created:`, message);
-            setMessage(message as Message);
+            if (chatId) {
+                console.log(`📡 Creating chat message with chatId: ${chatId}`);
+                const messageResp = await createChatMessage(chatId, prompt, params);
+                console.log(`✅ Message created:`, messageResp);
 
-            // 将当前message的信息存入到strorge中，刷新的时候可以从storage中取出message信息，从而保持继续获取结果的处理
-            setStorage('message', JSON.stringify(message));
-            console.log(`💾 Message saved to storage`);
 
-            // 新增一个message
-            const newMessages = [...messages, message as Message];
-            setMessages(newMessages);
-            console.log(`📝 Messages array updated, total messages:`, newMessages.length);
 
-            // Clear prompt input
-            setPrompt('');
-            console.log(`🧹 Prompt input cleared`);
+                if (messageResp.status === 'limit') {
+                    toast({
+                        variant: "limit",
+                        title: "Credit Limit Reached",
+                        description: messageResp.message || "You don't have enough credits to generate images. Please purchase a subscription plan.",
+                    });
+                    setIsGenerating(false);
+                    return;
+                }
+
+                const message = messageResp.data;
+                setMessage(message as Message);
+
+                // 将当前message的信息存入到strorge中，刷新的时候可以从storage中取出message信息，从而保持继续获取结果的处理
+                setStorage('message', JSON.stringify(message));
+                console.log(`💾 Message saved to storage`, message);
+
+                // 新增一个message
+                const newMessages = [...messages, message as Message];
+                setMessages(newMessages);
+                console.log(`📝 Messages array updated, total messages:`, newMessages.length);
+
+                // Clear prompt input
+                setPrompt('');
+                console.log(`🧹 Prompt input cleared`);
+            }
+
 
             // Test API call first
-            console.log(`🧪 Testing API call before starting polling...`);
-            const apiTestResult = await testApiCall(chatId, message.id);
+            // console.log(`🧪 Testing API call before starting polling...`);
+            // const apiTestResult = await testApiCall(chatId, message?.id);
 
-            if (apiTestResult) {
-                console.log(`🔄 Starting status check for message: ${message.id} in chat: ${chatId}`);
-                // 确保轮询立即开始
-                setTimeout(() => {
-                    console.log(`⏰ Executing delayed status check for message: ${message.id}`);
-                    checkMessageStatus(chatId, message.id);
-                }, 100);
-            } else {
-                console.error(`❌ API test failed, cannot start polling`);
-            }
+            // if (apiTestResult) {
+            //     console.log(`🔄 Starting status check for message: ${message.id} in chat: ${chatId}`);
+            //     // 确保轮询立即开始
+            //     setTimeout(() => {
+            //         console.log(`⏰ Executing delayed status check for message: ${message.id}`);
+            //         checkMessageStatus(chatId, message.id);
+            //     }, 100);
+            // } else {
+            //     console.error(`❌ API test failed, cannot start polling`);
+            // }
 
         } catch (error) {
             console.error('Error creating message:', error);
@@ -602,8 +620,8 @@ export default function Dashboard() {
                             <div className="flex items-center gap-2">
                                 <Button
                                     onClick={onMessageGenerate}
-                                    disabled={!prompt.trim() || isGenerating || !creditInfo?.canGenerate}
-                                    className={!prompt.trim() || isGenerating || !creditInfo?.canGenerate ? 'opacity-50 cursor-not-allowed' : ''}
+                                    disabled={!prompt.trim() || isGenerating}
+                                    className={!prompt.trim() || isGenerating ? 'opacity-50 cursor-not-allowed' : ''}
                                 >
                                     {isGenerating ? 'Generating...' : 'Generate'}
                                 </Button>

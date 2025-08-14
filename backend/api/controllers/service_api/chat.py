@@ -160,9 +160,9 @@ class ChatMessageResource(WebApiResource):
 
 api.add_resource(ChatsResource, "/chats")
 api.add_resource(CurrentChatResource, "/chats/current")
-api.add_resource(ChatMessagesResource, "/chats/<chat_id>/messages")
+api.add_resource(ChatMessagesResource, "/chats/<int:chat_id>/messages")
 api.add_resource(
-    ChatMessageImageResource, "/chats/<chat_id>/messages/<message_id>/images"
+    ChatMessageImageResource, "/chats/<int:chat_id>/messages/<int:message_id>/images"
 )
-api.add_resource(ChatMessageResource, "/chats/<chat_id>/messages/<message_id>")
-api.add_resource(ChatResource, "/chats/<chat_id>")
+api.add_resource(ChatMessageResource, "/chats/<int:chat_id>/messages/<int:message_id>")
+api.add_resource(ChatResource, "/chats/<int:chat_id>")

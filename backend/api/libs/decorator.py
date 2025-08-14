@@ -113,7 +113,7 @@ def unified_response(data_fields):
             fields_copy = base_response_fields.copy()
             fields_copy["data"] = fields.Nested(data_fields, allow_null=True)
 
-            logger.info("fields copy info %s == %s", fields_copy, resp )
+            # logger.info("fields copy info %s == %s", fields_copy, resp )
 
             return marshal(resp, fields_copy)
 

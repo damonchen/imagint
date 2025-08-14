@@ -32,6 +32,6 @@ export default function AppShell() {
           <MainContent isCollapsed={isCollapsed} />
         </SelfUserProvider>
       </div>
-    </div > : <>xxxxxxxxxxxx</>
+    </div > : <></>
   )
 }

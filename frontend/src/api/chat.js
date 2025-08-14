@@ -2,17 +2,17 @@ import { authApi } from '@/lib/api'
 
 export async function createChat(prompt) {
   const response = await authApi.post('/chats', { prompt })
-  return response.data
+  return response
 }
 
 export async function getCurrentChat() {
   const response = await authApi.get('/chats/current')
-  return response.data
+  return response
 }
 
 export async function getChatMessages(chatId) {
   const response = await authApi.get(`/chats/${chatId}/messages`)
-  return response.data
+  return response
 }
 
 export async function createChatMessage(chatId, prompt, promptParams) {
@@ -20,12 +20,12 @@ export async function createChatMessage(chatId, prompt, promptParams) {
     prompt,
     params: promptParams,
   })
-  return response.data
+  return response
 }
 
 export async function getChatMessage(chatId, messageId) {
   const response = await authApi.get(`/chats/${chatId}/messages/${messageId}`)
-  return response.data
+  return response
 }
 
 export async function getChats(page, pageSize) {
@@ -35,5 +35,5 @@ export async function getChats(page, pageSize) {
       pageSize,
     },
   })
-  return response.data
+  return response
 }
