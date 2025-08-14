@@ -15,41 +15,45 @@ from api.data.fields.plan_fields import (
 
 from . import api
 from .wraps import WebApiResource
+from api.libs.decorator import unified_response
+from api.libs.response import make_response
 
 
 class PlanApiResource(Resource):
 
-    @marshal_with(plan_fields)
+    @unified_response(plan_fields)
     def get(self):
-        return db.session.query(Plan).all()
+        plans = db.session.query(Plan).all()
+        return make_response(plans)
 
 
 class PlanPayResource(WebApiResource):
 
-    @marshal_with(subscription_fields)
+    @unified_response(subscription_fields)
     def post(self, user, plan_id):
         subscription = SubscriptionService.create_subscription(user, plan_id)
-        return subscription
+        return make_response(subscription)
 
 
 class SubscriptionsResource(WebApiResource):
 
-    @marshal_with(list_subscription_fields)
+    @unified_response(list_subscription_fields)
     def get(self, user):
-        return SubscriptionService.list_subscriptions(user)
+        subscriptions = SubscriptionService.list_subscriptions(user)
+        return make_response(subscriptions)
 
 
 class SubscriptionResource(WebApiResource):
 
-    @marshal_with(subscription_fields)
+    @unified_response(subscription_fields)
     def get(self, user, subscription_id):
         subscription = SubscriptionService.load_subscription(subscription_id)
-        return subscription
+        return make_response(subscription)
 
 
 class SubscriptionPaymentResource(WebApiResource):
 
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def post(self, user, subscription_id):
         parser = reqparse.RequestParser()
         parser.add_argument("channel", type=str, location="json")
@@ -65,49 +69,49 @@ class SubscriptionPaymentResource(WebApiResource):
             channel,
         )
 
-        return order
+        return make_response(order)
 
 
 class OrderCancelResource(WebApiResource):
 
     @manager_required
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def put(self, user, order_id):
         order = OrderService.cancel_order(user, order_id)
-        return order
+        return make_response(order)
 
 
 class OrderRefundResource(WebApiResource):
 
     @manager_required
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def put(self, user, order_id):
         order = OrderService.refund_order(user, order_id)
-        return order
+        return make_response(order)
 
 
 class OrderSuccessResource(WebApiResource):
 
     @manager_required
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def put(self, user, order_id):
         order = OrderService.success_order(user, order_id)
-        return order
+        return make_response(order)
 
 
 class OrderFailResource(WebApiResource):
 
     @manager_required
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def put(self, user, order_id):
         order = OrderService.fail_order(user, order_id)
-        return order
+        return make_response(order)
 
 
 class OrderStartResource(WebApiResource):
 
     @manager_required
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def put(self, user, order_id):
         parser = reqparse.RequestParser()
         parser.add_argument("channel", type=str, location="json")
@@ -120,22 +124,23 @@ class OrderStartResource(WebApiResource):
             order_id,
             channel,
         )
-        return order
+        return make_response(order)
 
 
 class OrdersResource(WebApiResource):
 
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def get(self, user):
-        return OrderService.list_orders(user)
+        orders = OrderService.list_orders(user)
+        return make_response(orders)
 
 
 class OrderResource(WebApiResource):
 
-    @marshal_with(order_fields)
+    @unified_response(order_fields)
     def get(self, user, order_id):
         order = OrderService.get_order(user, order_id)
-        return order
+        return make_response(order)
 
 
 api.add_resource(PlanApiResource, "/plans")

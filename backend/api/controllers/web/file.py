@@ -1,8 +1,8 @@
 import os
 import uuid
 import logging
-from flask import request, abort, current_app, send_file
-from flask_restful import Resource, reqparse
+from flask import request, current_app, send_file
+from flask_restful import Resource, reqparse, abort
 
 from api.services.chat_service import ChatMessageImageService
 from api.libs.sign_url import verify_signature, decrypt_token
@@ -25,9 +25,9 @@ class BaseFileResource(Resource):
         expires = args.expires
         path = request.path
 
-        logger.info('sig expires path %s %s %s %s', sig, expires, path, file_token)
+        logger.info("sig expires path %s %s %s %s", sig, expires, path, file_token)
 
-        sign_key = current_app.config.get("SIGN_KEY").encode('utf-8')
+        sign_key = current_app.config.get("SIGN_KEY").encode("utf-8")
         if not expires or not sig or not verify_signature(sign_key, path, expires, sig):
             abort(403, "Signature invalid or expired")
 
@@ -36,8 +36,8 @@ class BaseFileResource(Resource):
         #     abort(403, "URL already used")
         # RedisService.set(f"used:{file_token}", 1, 3600)  # 防重用，1小时保留记录
 
-        aes_key = current_app.config.get("AES_KEY").encode('utf-8')
-        aad = current_app.config.get("AAD").encode('utf-8')
+        aes_key = current_app.config.get("AES_KEY").encode("utf-8")
+        aad = current_app.config.get("AAD").encode("utf-8")
 
         try:
             file_id = decrypt_token(aes_key, file_token, aad)
@@ -62,7 +62,9 @@ class ImageResource(BaseFileResource):
 class ImageThumbnailResource(BaseFileResource):
 
     def get(self, file_token, width, height):
-        logger.info("thumbnail token %s width and height: %sx%s", file_token, width, height)
+        logger.info(
+            "thumbnail token %s width and height: %sx%s", file_token, width, height
+        )
         file_id = self._get(file_token)
 
         logger.info("get file token id %s", file_id)

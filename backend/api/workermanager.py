@@ -145,6 +145,7 @@ class Text2ImageWorker(object):
     def _run(self):
         model_script = {
             "qwen-image": "workers/qwen.py",
+            "flux1.dev": "workers/flux1_dev.py",
         }
 
         script = model_script.get(self.model)
@@ -207,7 +208,7 @@ class Text2ImageWorker(object):
             prefix = "------------------------------"
             start = stdout_output.find(prefix)
             if start != -1:
-                stdout_output = stdout_output[start + len(prefix):].strip()
+                stdout_output = stdout_output[start + len(prefix) :].strip()
 
             info = json.loads(stdout_output)
             file_paths = info["images"]
@@ -336,7 +337,7 @@ class Image2ImageWorker(object):
             # 从stdout的------之后提取
             prefix = "------------------------------"
             start = stdout_output.index(prefix)
-            stdout_output = stdout_output[start + len(prefix):].strip()
+            stdout_output = stdout_output[start + len(prefix) :].strip()
 
             if "images" in stdout_output:
                 # 提取图片路径
@@ -456,7 +457,7 @@ class Image2VideoWorker(object):
             # 从stdout的------之后提取
             prefix = "------------------------------"
             start = stdout_output.index(prefix)
-            stdout_output = stdout_output[start + len(prefix):].strip()
+            stdout_output = stdout_output[start + len(prefix) :].strip()
 
             if "videos" in stdout_output:
                 # 提取图片路径
@@ -554,7 +555,7 @@ def process_task(task_id, type, task_data):
             # 需要将image_path的文件移动到此目录下
             new_path = move_image(image_path)
             new_paths.append(new_path)
-        resp['images'] = new_paths
+        resp["images"] = new_paths
 
     elif resp.get("media_type") == "video":
         new_paths = []
@@ -562,7 +563,7 @@ def process_task(task_id, type, task_data):
             new_path = move_video(video_path)
             new_paths.append(new_path)
 
-        resp['videos'] = new_paths
+        resp["videos"] = new_paths
 
     task_db.update_task_status(
         task_id, TaskStatus.PROCESSED, json.dumps(resp, ensure_ascii=False)

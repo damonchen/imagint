@@ -62,7 +62,12 @@ class Inference(object):
 
     @modal.method()
     def run(
-        self, prompt: str, ratio: str = "16:9", batch_size: int = 4, seed: int = None
+        self,
+        prompt: str,
+        ratio: str = "16:9",
+        batch_size: int = 4,
+        seed: int = None,
+        steps: int = 30,
     ) -> list[bytes]:
         seed = seed if seed is not None else random.randint(0, 2**32 - 1)
 
@@ -82,7 +87,7 @@ class Inference(object):
             num_images_per_prompt=batch_size,
             width=width,
             height=height,
-            num_inference_steps=50,
+            num_inference_steps=steps,
             true_cfg_scale=4.0,
             generator=torch.Generator(device=self.device).manual_seed(seed),
         ).images
@@ -103,14 +108,15 @@ def main():
     with open(os.path.join(TEMP_PATH, "modal.txt"), "w") as fp:
         fp.write(json.dumps(data, indent=4, ensure_ascii=False))
 
-    prompt, ratio, batch_size, seed = (
+    prompt, ratio, batch_size, seed, steps = (
         data["prompt"],
         data["ratio"],
         data["batch_size"],
         data["seed"],
+        data.get("steps", 30),
     )
     with app.run():
-        images = Inference().run.remote(prompt, ratio, batch_size, seed)
+        images = Inference().run.remote(prompt, ratio, batch_size, seed, steps=steps)
         print("------------------------------")
 
         file_paths = []

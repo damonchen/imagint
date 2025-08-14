@@ -68,16 +68,18 @@ class TransactionService(object):
 
     @staticmethod
     def create_transaction(
-        user,
-        order_id,
-        type,
-        amount,
-        currency,
-        payment_channel,
-        reference_id,
-        description=None,
+            user,
+            order_id,
+            type,
+            amount,
+            currency,
+            payment_channel,
+            reference_id,
+            description=None,
     ):
-        order = OrderService.get_order()
+        order = OrderService.get_order(user, order_id)
+        if order is None:
+            return None
 
         return TransactionRepository.create_transaction(
             user,

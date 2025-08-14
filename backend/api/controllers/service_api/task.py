@@ -15,13 +15,16 @@ from api.services.chat_service import ChatMessageImageService, ChatMessageServic
 from api.services.repository.task_repository import TaskRepository
 from . import api
 from .wraps import WebApiResource, TaskApiResource
+from api.libs.decorator import unified_response
+from api.libs.response import make_response
+
 
 logger = logging.getLogger(__name__)
 
 
 class TasksResource(WebApiResource):
 
-    @marshal_with(task_pagination_fields)
+    @unified_response(task_pagination_fields)
     def get(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("status", type=str, location="args")
@@ -36,15 +39,17 @@ class TasksResource(WebApiResource):
             user, status=status, page=page, per_page=per_page
         )
 
-        return {
-            "page": page,
-            "per_page": per_page,
-            "total": total,
-            "hasMore": total > page * per_page,
-            "items": tasks,
-        }
+        return make_response(
+            {
+                "page": page,
+                "per_page": per_page,
+                "total": total,
+                "hasMore": total > page * per_page,
+                "items": tasks,
+            }
+        )
 
-    @marshal_with(task_fields)
+    @unified_response(task_fields)
     def post(self, user):
         parser = reqparse.RequestParser()
         parser.add_argument("payload", type=dict, location="json", required=True)
@@ -52,12 +57,12 @@ class TasksResource(WebApiResource):
 
         payload = args.payload
         task = TaskService.create_task_and_dispatch(user, payload)
-        return task
+        return make_response(task)
 
 
 class TaskResource(TaskApiResource):
 
-    @marshal_with(dispatch_task_fields)
+    @unified_response(dispatch_task_fields)
     def post(self):
         # 请求获取任务
         parser = reqparse.RequestParser()
@@ -74,7 +79,7 @@ class TaskResource(TaskApiResource):
         item = RedisService.lpop(key)
         if not item:
             # no task
-            return {"task_id": None}
+            return make_response({"task_id": None})
 
         item = json.loads(item)
         task_id = item["task_id"]
@@ -83,7 +88,7 @@ class TaskResource(TaskApiResource):
         task = TaskService.get_task(task_id)
         if task is None:
             logger.info(f"task {task_id} not found ")
-            return {"task_id": None}
+            return make_response({"task_id": None})
 
         user = UserService.load_user(task.user_id)
 
@@ -96,20 +101,22 @@ class TaskResource(TaskApiResource):
 
         if task:
             payload = task.payload
-            return {
-                "task_id": task_id,
-                "prompt": payload["prompt"],
-                "params": payload["params"],
-                "model": payload.get("model"),
-                "type": payload.get("type"),
-            }
+            return make_response(
+                {
+                    "task_id": task_id,
+                    "prompt": payload["prompt"],
+                    "params": payload["params"],
+                    "model": payload.get("model"),
+                    "type": payload.get("type"),
+                }
+            )
         else:
-            return {"task_id": None}
+            return make_response({"task_id": None})
 
 
 class TaskCompleteResource(TaskApiResource):
 
-    @marshal_with(task_fields)
+    @unified_response(task_fields)
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument("task_id", type=str, location="json", required=True)
@@ -126,7 +133,7 @@ class TaskCompleteResource(TaskApiResource):
         task = TaskRepository.load_task_by_task_id(task_id)
         if task is None:
             logger.info(f"task not valid {task_id}")
-            return json.dumps({"task_id": None})
+            return make_response({"task_id": None})
 
         user = UserService.load_user(task.user_id)
         payload = task.payload
@@ -145,7 +152,7 @@ class TaskCompleteResource(TaskApiResource):
         message_id = task.payload.get("message_id")
         ChatMessageService.update_message_status(user, message_id, status=status)
 
-        return task
+        return make_response(task)
 
 
 api.add_resource(TasksResource, "/tasks")

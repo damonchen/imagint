@@ -27,8 +27,10 @@ export default function AppShell() {
   return (
     token || isDebug ? <div>
       <div className='relative h-full overflow-hidden bg-background'>
-        <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
-        <MainContent isCollapsed={isCollapsed} />
+        <SelfUserProvider>
+          <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+          <MainContent isCollapsed={isCollapsed} />
+        </SelfUserProvider>
       </div>
     </div > : <>xxxxxxxxxxxx</>
   )
