@@ -10,6 +10,10 @@ import { useAuthStore } from '@/store/auth'
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar'
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { useNavigate } from 'react-router-dom'
+import { getUserCredits } from '@/api/credit'
+import { useQuery } from '@tanstack/react-query'
+import { useUserStore } from '@/store/user'
+
 
 interface SidebarProps extends React.HTMLAttributes<HTMLElement> {
   isCollapsed: boolean
@@ -23,6 +27,18 @@ export default function Sidebar2({
 }: SidebarProps) {
   const [navOpened, setNavOpened] = useState(false)
   const { user } = useSelf();
+  const { credit, setCredit } = useUserStore();
+
+  // 获取用户credit信息
+  const { data: creditInfo } = useQuery({
+    queryKey: ['userCredits'],
+    queryFn: getUserCredits,
+    refetchOnWindowFocus: false,
+  })
+
+  useEffect(() => {
+    setCredit(creditInfo);
+  }, [creditInfo, setCredit])
 
   const { clearToken } = useAuthStore();
 
@@ -132,6 +148,9 @@ export default function Sidebar2({
                   </Avatar>
                   <span className={`truncate text-sm ${isCollapsed ? 'hidden' : 'block'}`}>
                     {user?.username || "User"}
+                  </span>
+                  <span>
+                    {credit && credit.balance}
                   </span>
                 </Button>
               </DropdownMenuTrigger>

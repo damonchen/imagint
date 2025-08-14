@@ -21,7 +21,8 @@ export default function Chat() {
         const fetchChats = async () => {
             const result = await getChats(page, 10);
             console.log('fetch chats', result);
-            setChats(result.items);
+            const chat = result.data;
+            setChats(chat.items);
         }
 
         fetchChats();

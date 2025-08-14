@@ -19,7 +19,7 @@ const SelfUserProvider = ({ children }) => {
 
   const value = useMemo(() => {
     return {
-      user: data ?? {},
+      user: data?.data ?? {},
     }
   }, [data])
 

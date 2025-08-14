@@ -152,6 +152,8 @@ class Text2ImageWorker(object):
         if not script:
             raise ValueError(f"Unsupported model: {self.model}")
 
+        print(f"get the model {self.model} script {script}")
+
         # Run subprocess with 10 second timeout
         process = subprocess.Popen(
             [MODAL_PATH, script],
@@ -611,15 +613,16 @@ def consume():
 
             if response.status_code == 200:
                 task_data = response.json()
+                task_data = task_data["data"]
                 print("debug task data", task_data)
 
                 if task_data:
-                    task_id = task_data.get("task_id")
+                    task_id = task_data.get("taskId")
                 else:
                     task_id = None
 
                 if task_id is None:
-                    print("No task found, waiting for next iteration")
+                    print("No task* found, waiting for next iteration")
                     time.sleep(1)
                     continue
 
@@ -634,6 +637,7 @@ def consume():
                     time.sleep(1)
                     continue
 
+                print(f'add task {task_id} to tmp table {type}')
                 task_db.add_task(
                     task_id, type, json.dumps(task_data, ensure_ascii=False)
                 )

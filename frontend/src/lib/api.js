@@ -14,6 +14,7 @@ appApi.interceptors.response.use(
     const { data, status } = response
     console.log('response data status', data, status)
 
+    // 如果没有包装格式，直接返回data
     return data
   },
   (error) => {
@@ -60,6 +61,15 @@ authApi.interceptors.request.use(
 authApi.interceptors.response.use(
   (response) => {
     const { data, status } = response
+
+    console.log('auth api response', response)
+
+    // // 检查后端是否返回了包装格式 {"data": xxxx}
+    // if (data && typeof data === 'object' && 'data' in data) {
+    //   return data.data
+    // }
+
+    // 如果没有包装格式，直接返回data
     return data
   },
   (error) => {
