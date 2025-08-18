@@ -9,28 +9,27 @@ from api.extensions.database import db
 from api.data.models.types import TimeStamp
 from api.utils.uuid import generate_db_id, generate_db_trade_no
 from api.data.models.enums import StrEnum
-
 from api.data.models.types import JSONType
 
 
 class PlanType(StrEnum):
     FREE = "free"
-    PREMIUM = "premium"
+    PRO = "pro"
     ULTRA = "ultra"
 
 
-class Plan(db.Model):
-    __tablename__ = "plans"
+class SubscriptionPlan(db.Model):
+    __tablename__ = "subscription_plans"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(255), nullable=False)
-    monthly_fee = db.Column(DECIMAL, nullable=False)  # 月费用
-    included_tokens = db.Column(db.Integer, nullable=False)  # 包含的令牌数
-    included_requests = db.Column(db.Integer, nullable=False)  # 包含的请求数
-    concurrency_limit = db.Column(db.Integer, nullable=False)  # 并发限制
-    extra_token_price = db.Column(DECIMAL, nullable=False)  # 超出令牌数的价格
-    extra_request_price = db.Column(DECIMAL, nullable=False)  # 超出请求
-    feature = db.Column(JSONType, nullable=True)  # 特性描述，通常是 JSON 字符串
+    name = db.Column(db.String(64), nullable=False)  # 计划名称, free, pro, ultra
+    description = db.Column(db.Text, nullable=True)  # 计划的描述内容，用markdown描述
+    stripe_price_id = db.Column(db.String(64), nullable=False)
+    interval = db.Column(db.String(32), nullable=False, default='monthly')  # 计费周期，默认是30天, monthly, quarterly, yearly
+    interval_count = db.Column(db.Integer, nullable=False, default=1)  # 计费周期数，比如1或者12，发放的频率是按照月来发放的
+    price = db.Column(db.Integer, nullable=False)  # 价格（美分）
+    credit_amount = db.Column(db.Integer, nullable=False)  # 包含的credit数量
+    is_active = db.Column(db.Boolean, default=True)  # 是否激活
 
     created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
@@ -43,6 +42,7 @@ class Plan(db.Model):
     )
 
 
+# 一个人可以订阅多次，每次订阅一个月，要允许是否自动续订，如果是自动续订的
 class Subscription(db.Model):
     # 订阅信息
 
@@ -57,6 +57,7 @@ class Subscription(db.Model):
     user_id = db.Column(db.Integer, nullable=False)
     plan_id = db.Column(db.Integer, nullable=False)
 
+    stripe_subscription_id = db.Column(db.String(128), nullable=True)
     started_at = db.Column(
         TimeStamp, nullable=False, server_default=func.now()
     )  # 订阅起始时间
@@ -64,8 +65,8 @@ class Subscription(db.Model):
         TimeStamp, nullable=False, server_default=func.now()
     )  # 订阅结束时间
     status = db.Column(
-        db.String(32), nullable=False, default="active"
-    )  # active, expired, cancelled
+        db.String(32), nullable=False, default="unpaid"
+    )  # unpaid, active, expired, cancelled
     auto_renew = db.Column(db.Boolean, nullable=False, default=True)  # 是否自动续订
 
     created_by = db.Column(db.Integer, nullable=False)
@@ -87,6 +88,18 @@ class Subscription(db.Model):
         next = now + datetime.timedelta(days=days)
         return next > self.ended_at
 
+    @property
+    def is_active(self):
+        return self.status == 'active'
+
+    @property
+    def is_unpaid(self):
+        return self.status == 'unpaid'
+
+    @property
+    def is_cancelled(self):
+        return self.status == 'cancelled'
+
 
 # 订单信息
 class Order(db.Model):
@@ -99,7 +112,9 @@ class Order(db.Model):
 
     # 下单时间
     order_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
+    payment_channel = db.Column(db.String(16), nullable=False, default="stripe")  # 支付通道，默认采用stripe
     total_amount = db.Column(DECIMAL, nullable=False)  # 订单总金额
+    discount_amount = db.Column(DECIMAL, nullable=True)  # 折扣金额
     currency = db.Column(db.String(16), nullable=False, default="USD")  # 货币类型
     tax_rate = db.Column(DECIMAL(5, 2), nullable=False, default=0.0)  # 税率
     status = db.Column(

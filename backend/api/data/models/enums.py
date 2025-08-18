@@ -75,3 +75,17 @@ class TaskWebTokenStatus(StrEnum):
             if member.value == value:
                 return member
         return ValueError("not matching enum found for value: {}".format(value))
+
+
+class PaymentChannelStatus(StrEnum):
+    PAYPAL = "paypal"
+    ALIPAY = "alipay"
+    WECHAT = "wechat"
+    STRIPE = "stripe"
+
+    @staticmethod
+    def value_of(value):
+        for member in TaskWebTokenStatus:
+            if member.value == value:
+                return member
+        return ValueError("not matching enum found for value: {}".format(value))

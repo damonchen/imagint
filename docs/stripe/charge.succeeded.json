@@ -1,0 +1,128 @@
+{
+    "id": "evt_3RwxktP089RcvSY11jZxuXWM",
+    "object": "event",
+    "api_version": "2024-04-10",
+    "created": 1755403180,
+    "data": {
+        "object": {
+            "id": "ch_3RwxktP089RcvSY117T83TiZ",
+            "object": "charge",
+            "amount": 1000,
+            "amount_captured": 1000,
+            "amount_refunded": 0,
+            "application": null,
+            "application_fee": null,
+            "application_fee_amount": null,
+            "balance_transaction": "txn_3RwxktP089RcvSY11dS7FSrG",
+            "billing_details": {
+                "address": {
+                    "city": null,
+                    "country": "HK",
+                    "line1": null,
+                    "line2": null,
+                    "postal_code": null,
+                    "state": null
+                },
+                "email": "netubu@gmail.com",
+                "name": "damon",
+                "phone": null,
+                "tax_id": null
+            },
+            "calculated_statement_descriptor": "Stripe",
+            "captured": true,
+            "created": 1755403180,
+            "currency": "usd",
+            "customer": "cus_SsiMY6i0fEjB4v",
+            "description": "Subscription creation",
+            "destination": null,
+            "dispute": null,
+            "disputed": false,
+            "failure_balance_transaction": null,
+            "failure_code": null,
+            "failure_message": null,
+            "fraud_details": {},
+            "invoice": null,
+            "livemode": false,
+            "metadata": {},
+            "on_behalf_of": null,
+            "order": null,
+            "outcome": {
+                "advice_code": null,
+                "network_advice_code": null,
+                "network_decline_code": null,
+                "network_status": "approved_by_network",
+                "reason": null,
+                "risk_level": "normal",
+                "risk_score": 35,
+                "seller_message": "Payment complete.",
+                "type": "authorized"
+            },
+            "paid": true,
+            "payment_intent": "pi_3RwxktP089RcvSY115WLYd54",
+            "payment_method": "pm_1RwxksP089RcvSY1hvnW9O62",
+            "payment_method_details": {
+                "card": {
+                    "amount_authorized": 1000,
+                    "authorization_code": "191156",
+                    "brand": "visa",
+                    "checks": {
+                        "address_line1_check": null,
+                        "address_postal_code_check": null,
+                        "cvc_check": "pass"
+                    },
+                    "country": "US",
+                    "exp_month": 11,
+                    "exp_year": 2026,
+                    "extended_authorization": {
+                        "status": "disabled"
+                    },
+                    "fingerprint": "ED0F0C7KOg4pmsYY",
+                    "funding": "credit",
+                    "incremental_authorization": {
+                        "status": "unavailable"
+                    },
+                    "installments": null,
+                    "last4": "4242",
+                    "mandate": null,
+                    "multicapture": {
+                        "status": "unavailable"
+                    },
+                    "network": "visa",
+                    "network_token": {
+                        "used": false
+                    },
+                    "network_transaction_id": "696848704867557",
+                    "overcapture": {
+                        "maximum_amount_capturable": 1000,
+                        "status": "unavailable"
+                    },
+                    "regulated_status": "unregulated",
+                    "three_d_secure": null,
+                    "wallet": null
+                },
+                "type": "card"
+            },
+            "radar_options": {},
+            "receipt_email": null,
+            "receipt_number": null,
+            "receipt_url": "https://pay.stripe.com/receipts/invoices/CAcaFwoVYWNjdF8xUEFuSllQMDg5UmN2U1kxKK6nhcUGMgYkihtodQY6LBYP5J5EdBw_FzUAEM5ytBdUzM-Ep32P8pgZ_IP4P2ZbqdFPCHZSeE6n6MHt?s=ap",
+            "refunded": false,
+            "review": null,
+            "shipping": null,
+            "source": null,
+            "source_transfer": null,
+            "statement_descriptor": null,
+            "statement_descriptor_suffix": null,
+            "status": "succeeded",
+            "transfer_data": null,
+            "transfer_group": null
+        }
+    },
+    "livemode": false,
+    "pending_webhooks": 2,
+    "request": {
+        "id": null,
+        "idempotency_key": "7af785d8-85c5-411c-ac8f-d2489cefe984"
+    },
+    "type": "charge.succeeded"
+}

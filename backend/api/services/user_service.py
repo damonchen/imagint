@@ -12,7 +12,7 @@ from api.services.repository.user_repository import (
     AccountRepository,
     UserLocationEvidenceRepository,
 )
-from api.services.credit_service import CreditService
+from api.services.credit_service import UserCreditService
 from api.extensions.database import db
 from api.extensions.mail import mail
 from flask import render_template
@@ -98,7 +98,7 @@ class UserService(object):
         )
 
         # Initialize credit for the new user
-        CreditService.initialize_user_credits(user)
+        UserCreditService.initialize_user_credits(user)
 
         return user
 

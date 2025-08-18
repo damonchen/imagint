@@ -25,6 +25,7 @@ from api.extensions import (
     wechat,
     # qrcode_api,
     limiter,
+    stripe,
     # rabbitmq,
 )
 
@@ -97,6 +98,7 @@ def initialize_extension(app):
         ("wechat", wechat),
         ("migrate", migrate),
         ("limiter", limiter),
+        ("stripe", stripe),
         # ("rabbitmq", rabbitmq),
     ]
 
@@ -257,12 +259,44 @@ def register_debug_route(app):
         return {"links": links}
 
 
+    @app.route("/urls")
+    @debug_allowed
+    @api_json()
+    def site_urls():
+        from werkzeug.utils import import_string
+
+        routes = []
+        for rule in app.url_map.iter_rules():
+            try:
+                if rule.endpoint != 'static':
+                    # print('app.view_functions[rule.endpoint]', app.view_functions[rule.endpoint], dir(app.view_functions[rule.endpoint]))
+                    if hasattr(app.view_functions[rule.endpoint], 'import_name'):
+                        import_name = app.view_functions[rule.endpoint].import_name
+                        obj = import_string(import_name)
+                        routes.append({rule.rule: "%s\n%s" % (",".join(list(rule.methods)), obj.__doc__)})
+                    else:
+                        if hasattr(app.view_functions[rule.endpoint], "methods"):
+                            routes.append({rule.rule: app.view_functions[rule.endpoint].__name__ + '['+  ', '.join(
+                                app.view_functions[rule.endpoint].methods) + ']'} )
+                        else:
+                            routes.append({rule.rule: app.view_functions[rule.endpoint].__name__})
+            except Exception as exc:
+                routes.append({rule.rule:
+                                   "(%s) INVALID ROUTE DEFINITION!!!" % rule.endpoint})
+                route_info = "%s => %s" % (rule.rule, rule.endpoint)
+                app.logger.error("Invalid route: %s" % route_info, exc_info=True)
+                # func_list[rule.rule] = obj.__doc__
+
+        return routes
+
 def register_blueprint(app, url_prefix="/api/v1"):
     from .controllers.service_api import bp as service_api_bp
     from .controllers.web import bp as web_bp
 
     app.register_blueprint(service_api_bp, url_prefix=url_prefix)
-    app.register_blueprint(web_bp, url_prefix="/")
+    app.register_blueprint(web_bp, url_prefix="/v1")
+
+    print(app.route)
 
 
 # def register_scheduler(app):

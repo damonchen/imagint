@@ -82,6 +82,9 @@ DEFAULTS = {
     "AES_KEY": "1c6a542248cad06516836644a354abe0",
     "SIGN_KEY": "0e87696d68db81809176990cb33dda47",
     "IMAGE_PATH": "/mnt/f/dev/Imagint/src/backend/images",
+    "STRIPE_SECRET_KEY": "",
+    "STRIPE_PUBLIC_KEY": "",
+    "STRIPE_WEBHOOK_SECRET": "",
 }
 
 
@@ -354,3 +357,8 @@ class Config:
         self.SIGN_KEY = get_env("SIGN_KEY")
 
         self.IMAGE_PATH = get_env("IMAGE_PATH")
+
+        self.STRIPE_SECRET_KEY = get_env("STRIPE_SECRET_KEY")
+        self.STRIPE_PUBLIC_KEY = get_env("STRIPE_PUBLIC_KEY")
+        self.STRIPE_WEBHOOK_SECRET = get_env("STRIPE_WEBHOOK_SECRET")
+

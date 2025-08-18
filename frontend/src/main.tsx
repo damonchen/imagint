@@ -5,6 +5,7 @@ import { RouterProvider } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { ThemeProvider } from '@/components/theme-provider'
 import AuthProvider from '@/provider/auth-provider'
+import { AlertDialogProvider } from '@/provider/alert-dialog-provider'
 import router from '@/router'
 import '@/index.css'
 
@@ -14,9 +15,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider defaultTheme='light' storageKey='vite-ui-theme'>
       <QueryClientProvider client={queryClient} >
-        <AuthProvider>
-          <RouterProvider router={router} />
-        </AuthProvider>
+        <AlertDialogProvider>
+          <AuthProvider>
+            <RouterProvider router={router} />
+          </AuthProvider>
+        </AlertDialogProvider>
         <Toaster />
       </QueryClientProvider>
     </ThemeProvider>

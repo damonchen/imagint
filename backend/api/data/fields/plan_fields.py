@@ -5,9 +5,11 @@ plan_fields = {
     "id": fields.String(attribute="id"),
     "name": fields.String(attribute="name"),
     "description": fields.String(attribute="description"),
+    "interval": fields.String(attribute="interval"),
+    "intervalCount": fields.String(attribute="interval_count"),
     "price": fields.String(attribute="price"),
-    "discountAmount": fields.String(attribute="discount_amount"),
-    "month": fields.String(attribute="month"),
+    "creditAmount": fields.String(attribute="credit_amount"),
+    "isActive": fields.String(attribute="is_active"),
     "createdBy": fields.String(attribute="created_by"),
     "createdAt": TimestampField(attribute="created_at"),
     "updatedBy": fields.String(attribute="updated_by"),
@@ -15,23 +17,6 @@ plan_fields = {
 }
 
 list_plan_fields = fields.List(fields.Nested(plan_fields))
-
-
-subscription_fields = {
-    "id": fields.String(attribute="id"),
-    "userId": fields.String(attribute="user_id"),
-    "planId": fields.String(attribute="plan_id"),
-    "startedAt": fields.String(attribute="started_at"),
-    "endedAt": fields.String(attribute="ended_at"),
-    "status": fields.String(attribute="status"),
-    "createdBy": fields.String(attribute="created_by"),
-    "createdAt": TimestampField(attribute="created_at"),
-    "updatedBy": fields.String(attribute="updated_by"),
-    "updatedAt": TimestampField(attribute="updated_at"),
-}
-
-list_subscription_fields = fields.List(fields.Nested(subscription_fields))
-
 
 order_fields = {
     "id": fields.String(attribute="id"),

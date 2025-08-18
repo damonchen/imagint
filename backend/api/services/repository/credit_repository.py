@@ -1,4 +1,5 @@
-from api.data.models.credit import UserCredit, CreditTransaction, SubscriptionPlan
+from api.data.models.credit import UserCredit, CreditTransaction
+from api.data.models.subscription import SubscriptionPlan
 from api.extensions.database import db
 from datetime import datetime
 
@@ -62,7 +63,7 @@ class CreditTransactionRepository(object):
         return credit_transaction
 
     @staticmethod
-    def get_user_transactions(user_id: int, page: int, per_page: int):
+    def get_user_transactions_pagination(user_id: int, page: int, per_page: int):
         return (
             CreditTransaction.query.filter_by(user_id=user_id)
             .order_by(CreditTransaction.created_at.desc())

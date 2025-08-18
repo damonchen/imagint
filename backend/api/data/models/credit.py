@@ -87,30 +87,31 @@ class CreditTransaction(db.Model):
     user = relationship("User", back_populates="credit_transactions")
 
 
-class SubscriptionPlan(db.Model):
-    __tablename__ = "subscription_plans"
-
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = Column(String(64), nullable=False)  # 计划名称
-    price_usd = Column(Integer, nullable=False)  # 价格（美分）
-    credit_amount = Column(Integer, nullable=False)  # 包含的credit数量
-    duration_days = Column(Integer, nullable=False)  # 有效期（天）
-    is_active = Column(Boolean, default=True)  # 是否激活
-    created_at = Column(DateTime, default=datetime.now)
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        # 设置默认计划
-        if not self.name:
-            if self.price_usd == 0:
-                self.name = "Free"
-                self.credit_amount = 0
-                self.duration_days = 30
-            elif self.price_usd == 1000:  # $10.00
-                self.name = "Basic"
-                self.credit_amount = 500
-                self.duration_days = 30
-            elif self.price_usd == 2000:  # $20.00
-                self.name = "Premium"
-                self.credit_amount = 1200
-                self.duration_days = 30
+# class SubscriptionPlan(db.Model):
+#     __tablename__ = "subscription_plans"
+#
+#     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+#     name = Column(String(64), nullable=False)  # 计划名称
+#     stripe_price_id = Column(String(64), nullable=False)
+#     price_usd = Column(Integer, nullable=False)  # 价格（美分）
+#     credit_amount = Column(Integer, nullable=False)  # 包含的credit数量
+#     duration_days = Column(Integer, nullable=False)  # 有效期（天）
+#     is_active = Column(Boolean, default=True)  # 是否激活
+#     created_at = Column(DateTime, default=datetime.now)
+#
+#     def __init__(self, **kwargs):
+#         super().__init__(**kwargs)
+#         # 设置默认计划
+#         if not self.name:
+#             if self.price_usd == 0:
+#                 self.name = "Free"
+#                 self.credit_amount = 0
+#                 self.duration_days = 30
+#             elif self.price_usd == 1000:  # $10.00
+#                 self.name = "Basic"
+#                 self.credit_amount = 500
+#                 self.duration_days = 30
+#             elif self.price_usd == 2000:  # $20.00
+#                 self.name = "Premium"
+#                 self.credit_amount = 1200
+#                 self.duration_days = 30

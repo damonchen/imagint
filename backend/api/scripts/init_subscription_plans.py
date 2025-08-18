@@ -12,8 +12,8 @@ sys.path.append(
 )
 
 from api.extensions.database import db
-from api.data.models.credit import SubscriptionPlan
-from api.app import create_app
+from api.data.models.subscription import SubscriptionPlan
+from api.api_app import create_app
 
 
 def init_subscription_plans():
@@ -30,25 +30,40 @@ def init_subscription_plans():
         # 创建默认计划
         plans = [
             {
-                "name": "Free",
-                "price_usd": 0,
+                "name": "free",
+                "price": 0,
+                "interval": "monthly",
+                "interval_count": 1,
+                "stripe_price_id": "",
                 "credit_amount": 0,
-                "duration_days": 30,
+                # "duration_days": 30,
                 "is_active": True,
+                "created_by": 1,
+                "updated_by": 1,
             },
             {
-                "name": "Basic",
-                "price_usd": 1000,  # $10.00
+                "name": "pro",
+                "price": 1000,  # $10.00
+                "interval": "monthly",
+                "interval_count": 1,
+                "stripe_price_id": "price_1RwCoMP089RcvSY1barkpo7F",
                 "credit_amount": 500,
-                "duration_days": 30,
+#                 "duration_days": 30,
                 "is_active": True,
+                "created_by": 1,
+                "updated_by": 1,
             },
             {
-                "name": "Premium",
-                "price_usd": 2000,  # $20.00
+                "name": "ultra",
+                "price": 2000,  # $20.00
+                "interval": "monthly",
+                "interval_count": 1,
+                "stripe_price_id": "",
                 "credit_amount": 1200,
-                "duration_days": 30,
+#                 "duration_days": 30,
                 "is_active": True,
+                "created_by": 1,
+                "updated_by": 1,
             },
         ]
 
@@ -56,7 +71,7 @@ def init_subscription_plans():
             plan = SubscriptionPlan(**plan_data)
             db.session.add(plan)
             print(
-                f"Created plan: {plan.name} - ${plan.price_usd/100:.2f} - {plan.credit_amount} credits"
+                f"Created plan: {plan.name} - ${plan.price / 100:.2f} - {plan.credit_amount} credits"
             )
 
         db.session.commit()

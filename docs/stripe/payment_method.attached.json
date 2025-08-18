@@ -1,0 +1,66 @@
+{
+    "id": "evt_1RwxkwP089RcvSY1Bzcrc55p",
+    "object": "event",
+    "api_version": "2024-04-10",
+    "created": 1755403181,
+    "data": {
+        "object": {
+            "id": "pm_1RwxksP089RcvSY1hvnW9O62",
+            "object": "payment_method",
+            "allow_redisplay": "limited",
+            "billing_details": {
+                "address": {
+                    "city": null,
+                    "country": "HK",
+                    "line1": null,
+                    "line2": null,
+                    "postal_code": null,
+                    "state": null
+                },
+                "email": "netubu@gmail.com",
+                "name": "damon",
+                "phone": null,
+                "tax_id": null
+            },
+            "card": {
+                "brand": "visa",
+                "checks": {
+                    "address_line1_check": null,
+                    "address_postal_code_check": null,
+                    "cvc_check": "pass"
+                },
+                "country": "US",
+                "display_brand": "visa",
+                "exp_month": 11,
+                "exp_year": 2026,
+                "fingerprint": "ED0F0C7KOg4pmsYY",
+                "funding": "credit",
+                "generated_from": null,
+                "last4": "4242",
+                "networks": {
+                    "available": [
+                        "visa"
+                    ],
+                    "preferred": null
+                },
+                "regulated_status": "unregulated",
+                "three_d_secure_usage": {
+                    "supported": true
+                },
+                "wallet": null
+            },
+            "created": 1755403178,
+            "customer": "cus_SsiMY6i0fEjB4v",
+            "livemode": false,
+            "metadata": {},
+            "type": "card"
+        }
+    },
+    "livemode": false,
+    "pending_webhooks": 2,
+    "request": {
+        "id": null,
+        "idempotency_key": "7af785d8-85c5-411c-ac8f-d2489cefe984"
+    },
+    "type": "payment_method.attached"
+}

@@ -2,51 +2,92 @@ import datetime
 from dateutil.relativedelta import relativedelta
 import logging
 from api.data.models.enums import SubscriptionStatus, OrderStatus
-from api.data.models.subscription import Subscription, Plan, Order
+from api.data.models.subscription import Subscription, SubscriptionPlan, Order
 from api.extensions.database import db
-from api.events.subscription import *
+from api.events.subscription import subscription_was_created
 
 from api.services.errors.common import NotFoundError, NotPermittedError
 
 
-class PlanRepository(object):
+class SubscriptionPlanRepository(object):
+
+    @staticmethod
+    def load_plans():
+        return db.session.query(SubscriptionPlan).all()
 
     @staticmethod
     def load_plan(plan_id):
-        return db.session.query(Plan).filter(Plan.id == plan_id).first()
+        return (
+            db.session.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.id == plan_id)
+            .first()
+        )
+
+    @staticmethod
+    def get_plan_by_stripe_price_id(price_id):
+        return (
+            db.session.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.stripe_price_id == price_id)
+            .first()
+        )
 
     @staticmethod
     def load_plan_by_name(name):
-        return db.session.query(Plan).filter(Plan.name == name).first()
+        return (
+            db.session.query(SubscriptionPlan)
+            .filter(SubscriptionPlan.name == name)
+            .first()
+        )
 
 
 class SubscriptionRepository(object):
 
     @staticmethod
-    def list_subscriptions(user, status=SubscriptionStatus.ACTIVE.value):
+    def load_subscription_by_stripe_id(stripe_subscription_id):
         return (
             db.session.query(Subscription)
-            .filter(Subscription.user_id == user.id, Subscription.status == status)
-            .all()
-        )
-
-    @staticmethod
-    def load_subscription(subscription_id, status=SubscriptionStatus.ACTIVE.value):
-        return (
-            db.session.query(Subscription)
-            .filter(Subscription.id == subscription_id, Subscription.status == status)
+            .filter(Subscription.stripe_subscription_id == stripe_subscription_id)
             .first()
         )
 
     @staticmethod
-    def create_subscription(user, plan, status=SubscriptionStatus.ACTIVE.value):
+    def update_subscription_stripe_id(subscription, stripe_subscription_id):
+        subscription.stripe_subscription_id = stripe_subscription_id
+        db.session.add(subscription)
+        db.session.flush()
+
+        return subscription
+
+    @staticmethod
+    def list_subscriptions(user, status=None):
+        query = db.session.query(Subscription).filter(Subscription.user_id == user.id)
+
+        if status is not None:
+            query = query.filter(Subscription.status == status)
+
+        return query.all()
+
+    @staticmethod
+    def load_subscription(subscription_id, status=None):
+        query = db.session.query(Subscription).filter(Subscription.id == subscription_id)
+
+        if status is not None:
+            query = query.filter(Subscription.status == status)
+
+        return query.first()
+
+    @staticmethod
+    def create_subscription(
+            user, plan, stripe_subscription_id, status=SubscriptionStatus.ACTIVE.value
+    ):
         now = datetime.datetime.now(datetime.UTC)
-        ended_at = now = relativedelta(months=+plan.month)
+        ended_at = now + relativedelta(months=1)
 
         subscription = Subscription(
             user_id=user.id,
             plan_id=plan.id,
-            plan_type=plan.type,
+            stripe_subscription_id=stripe_subscription_id,
+            # plan_type=plan.type,
             started_at=now,
             ended_at=ended_at,
             status=status,
@@ -56,7 +97,7 @@ class SubscriptionRepository(object):
         db.session.add(subscription)
         db.session.flush()
 
-        # subscription_was_created.send(subscription)
+        subscription_was_created.send(subscription)
 
         return subscription
 
@@ -68,7 +109,7 @@ class SubscriptionRepository(object):
             status=None,
     ):
         subscription = SubscriptionRepository.load_subscription(
-            subscription_id, status=SubscriptionStatus.ACTIVE.value
+            subscription_id
         )
         if subscription is None:
             raise NotFoundError("subscription not found")
@@ -77,15 +118,28 @@ class SubscriptionRepository(object):
             raise NotPermittedError("subscription not permitted")
 
         if plan_id is not None:
-            plan = PlanRepository.load_plan(plan_id=plan_id)
+            plan = SubscriptionPlanRepository.load_plan(plan_id)
             if plan is None:
                 raise NotFoundError("plan not found")
 
             subscription.plan_id = plan_id
             subscription.started_at = datetime.datetime.now(datetime.UTC)
-            subscription.ended_at = datetime.datetime.now(datetime.UTC) + relativedelta(
-                months=+plan.month
-            )
+
+            if plan.interval == 'monthly':
+                delta = relativedelta(
+                    months=plan.interval * plan.interval_count
+                )
+            elif plan.interval == 'quarterly':
+                delta = relativedelta(
+                    months=plan.interval * 3 * plan.interval_count
+                )
+            elif plan.interval == 'yearly':
+                delta = relativedelta(
+                    years=plan.interval * plan.interval_count
+                )
+            else:
+                delta = relativedelta(days=plan.interval * plan.interval_count)
+            subscription.ended_at = datetime.datetime.now(datetime.UTC) + delta
 
         if status is not None:
             subscription.status = status
@@ -100,29 +154,29 @@ class SubscriptionRepository(object):
     @staticmethod
     def active_subscription(user, subscription_id):
         status = SubscriptionStatus.ACTIVE.value
-        return SubscriptionRepository.update_subscription(user, subscription_id, status)
+        return SubscriptionRepository.update_subscription(user, subscription_id, status=status)
 
     @staticmethod
-    def pasue_subscription(user, subscription_id):
+    def pause_subscription(user, subscription_id):
         status = SubscriptionStatus.PAUSED.value
-        return SubscriptionRepository.update_subscription(user, subscription_id, status)
+        return SubscriptionRepository.update_subscription(user, subscription_id, status=status)
 
     @staticmethod
     def cancel_subscription(user, subscription_id):
         status = SubscriptionStatus.CANCELLED.value
-        return SubscriptionRepository.update_subscription(user, subscription_id, status)
+        return SubscriptionRepository.update_subscription(user, subscription_id, status=status)
 
     @staticmethod
     def expire_subscription(user, subscription_id):
         status = SubscriptionStatus.EXPIRED.value
-        return SubscriptionRepository.update_subscription(user, subscription_id, status)
+        return SubscriptionRepository.update_subscription(user, subscription_id, status=status)
 
 
 class OrderRepository(object):
 
     @staticmethod
     def create_order(
-            user, subscription_id, amount, discount_amount=0, payment_channel=""
+            user, subscription_id, amount, discount_amount=0, payment_channel="stripe"
     ):
         subscription = SubscriptionRepository.load_subscription(
             subscription_id=subscription_id
@@ -133,12 +187,12 @@ class OrderRepository(object):
         order = Order(
             user_id=user.id,
             subscription_id=subscription.id,
-            amount=amount,
+            total_amount=amount,
             discount_amount=discount_amount,
-            payment_channel=payment_channel,
             status=OrderStatus.PENDING.value,
             created_by=user.id,
-            udpated_by=user.id,
+            updated_by=user.id,
+            payment_channel=payment_channel
         )
         db.session.add(order)
         db.session.flush()
@@ -151,7 +205,12 @@ class OrderRepository(object):
 
     @staticmethod
     def load_order(user, order_id):
-        return db.session.query(Order).filter(Order.user_id == user.id).filter(Order.id == order_id).first()
+        return (
+            db.session.query(Order)
+            .filter(Order.user_id == user.id)
+            .filter(Order.id == order_id)
+            .first()
+        )
 
     @staticmethod
     def load_order_by_subscription_id(subscription_id):
