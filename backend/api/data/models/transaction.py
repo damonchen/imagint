@@ -21,8 +21,15 @@ class Invoice(db.Model):
 
     payment_due_date = db.Column(TimeStamp, nullable=False)  # 最晚支付日期
 
+    created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
-
+    updated_by = db.Column(db.Integer, nullable=False)
+    updated_at = db.Column(
+        TimeStamp,
+        nullable=False,
+        server_default=func.now(),
+        server_onupdate=func.now(),
+    )
 
 # 使用记录
 class UsageRecord(db.Model):
@@ -37,7 +44,9 @@ class UsageRecord(db.Model):
     requests_made = db.Column(db.Integer, nullable=False, default=0)  # 当天调用次数
     cost = db.Column(DECIMAL, nullable=False, default=Decimal("0.00"))  # 当天费用
 
+    created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
+    updated_by = db.Column(db.Integer, nullable=False)
     updated_at = db.Column(
         TimeStamp,
         nullable=False,
@@ -46,6 +55,7 @@ class UsageRecord(db.Model):
     )
 
 
+# 退款
 class Refund(db.Model):
     __tablename__ = "refunds"
 
@@ -60,7 +70,9 @@ class Refund(db.Model):
     gateway_refund_id = db.Column(db.String(255), nullable=True)  # 支付网关的退款ID
     reason = db.Column(db.String(255), nullable=True)  # 退款原因
 
+    created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
+    updated_by = db.Column(db.Integer, nullable=False)
     updated_at = db.Column(
         TimeStamp,
         nullable=False,
@@ -93,7 +105,10 @@ class Transaction(db.Model):
     )  # 参考编号，如支付平台的交易号
 
     description = db.Column(db.String(255), nullable=True)  # 交易描述
+
+    created_by = db.Column(db.Integer, nullable=False)
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
+    updated_by = db.Column(db.Integer, nullable=False)
     updated_at = db.Column(
         TimeStamp,
         nullable=False,

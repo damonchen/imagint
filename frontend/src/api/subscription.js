@@ -39,3 +39,16 @@ export async function failTransaction(id) {
 export async function startTransaction(id) {
   return authApi.get(`/transaction/${id}/start`)
 }
+
+// 新增的API函数
+export async function createSubscription(plan) {
+  return authApi.post('/subscriptions', { plan })
+}
+
+export async function cancelSubscription(subscriptionId) {
+  return authApi.post(`/subscriptions/${subscriptionId}/cancel`)
+}
+
+export async function getStripeCheckoutUrl(planId) {
+  return authApi.post('/stripe/checkout', { planId })
+}

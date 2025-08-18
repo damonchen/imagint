@@ -24,9 +24,9 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:5050/api',
+        target: 'http://192.168.187.144:5080',
         changeOrigin: true,
-        rewrite: (path) => path.replace('\/api/', ''),
+        // rewrite: (path) => path.replace('\/api/', ''),
       }
     },
     port: IS_RUNNING_GITPOD ? HTTPS_PORT : SERVER_PORT,

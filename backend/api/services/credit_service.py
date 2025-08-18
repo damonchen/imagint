@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 
 from api.extensions.database import transaction
-from api.data.models.credit import UserCredit, CreditTransaction, SubscriptionPlan
+from api.data.models.credit import UserCredit, CreditTransaction
+# from api.data.models.subscription import SubscriptionPlan
 from api.data.models.user import User
 from api.services.repository.user_repository import UserRepository
 from api.services.repository.credit_repository import (
@@ -12,11 +13,10 @@ from api.services.repository.credit_repository import (
     SubscriptionPlanRepository,
 )
 
-
 logger = logging.getLogger(__name__)
 
 
-class CreditService(object):
+class UserCreditService(object):
     """Credit系统服务类"""
 
     @staticmethod
@@ -54,7 +54,7 @@ class CreditService(object):
     def add_subscription_credits(user: User, plan_name: str, amount_usd: int) -> bool:
         """为用户添加订阅计划的credit"""
         if not user.credit:
-            user_credit = CreditService.initialize_user_credits(user)
+            user_credit = UserCreditService.initialize_user_credits(user)
         else:
             user_credit = user.credit
 
@@ -72,14 +72,14 @@ class CreditService(object):
         user_credit.add_credits(credit_amount, f"subscription_{plan_name}")
 
         # 记录订阅交易
-        CreditTransactionRepository.create_credit_transaction(
-            user_id=user.id,
-            amount=credit_amount,
-            balance_after=user_credit.balance,
-            transaction_type="credit_add",
-            source=f"subscription_{plan_name}",
-            description=f"Subscription plan: {plan_name} (${amount_usd/100:.2f})",
-        )
+        # CreditTransactionRepository.create_credit_transaction(
+        #     user_id=user.id,
+        #     amount=credit_amount,
+        #     balance_after=user_credit.balance,
+        #     transaction_type="credit_add",
+        #     source=f"subscription_{plan_name}",
+        #     description=f"Subscription plan: {plan_name} (${amount_usd/100:.2f})",
+        # )
 
         logger.info(
             f"Added {credit_amount} credits for user {user.id} via {plan_name} subscription"
@@ -92,7 +92,7 @@ class CreditService(object):
         """消费credit生成图片"""
         if not user.credit:
             # 如果用户没有credit账户，先初始化
-            user_credit = CreditService.initialize_user_credits(user)
+            user_credit = UserCreditService.initialize_user_credits(user)
         else:
             user_credit = user.credit
 
@@ -123,8 +123,8 @@ class CreditService(object):
         return False
 
     @staticmethod
-    def get_user_transactions(user_id: int, page: int, per_page: int):
-        return CreditTransactionRepository.get_user_transactions(
+    def get_user_transactions_pagination(user_id: int, page: int, per_page: int):
+        return CreditTransactionRepository.get_user_transactions_pagination(
             user_id=user_id, page=page, per_page=per_page
         )
 
@@ -183,14 +183,20 @@ class CreditService(object):
         """获取可用的订阅计划"""
         plans = SubscriptionPlanRepository.get_active_subscription_plans()
 
+        def get_duration_days(plan):
+            if plan.interval == 'monthly':
+                return 30 * plan.interval_count
+            elif plan.interval == 'yearly':
+                return 360 * plan.interval_count
+
         return [
             {
                 "id": plan.id,
                 "name": plan.name,
-                "price_usd": plan.price_usd,
-                "price_display": f"${plan.price_usd/100:.2f}",
+                "price": plan.price,
+                "price_display": f"${plan.price / 100:.2f}",
                 "credit_amount": plan.credit_amount,
-                "duration_days": plan.duration_days,
+                "duration_days": get_duration_days(plan),
                 "images_included": plan.credit_amount // 4,
             }
             for plan in plans

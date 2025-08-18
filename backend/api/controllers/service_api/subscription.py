@@ -1,46 +1,72 @@
+import json
 import logging
+
+from flask import jsonify, current_app
 from flask_restful import Resource, marshal_with, reqparse
 
 from api.extensions.database import db
 from api.libs.decorator import manager_required
 
-from api.data.models.subscription import Plan
-from api.services.subscription_service import OrderService, SubscriptionService
+from api.data.models.subscription import SubscriptionPlan
+from api.services.subscription_service import (
+    OrderService,
+    SubscriptionService,
+    SubscriptionPlanService,
+)
 from api.data.fields.plan_fields import (
     plan_fields,
-    subscription_fields,
     order_fields,
-    list_subscription_fields,
 )
+from api.data.fields.subscription_fields import (
+    subscription_fields,
+    list_subscription_fields,
+    subscription_url_fields,
+    cancel_subscription_fields,
+)
+
+from api.extensions.stripe import stripe
+from api.services.redis_service import RedisService
 
 from . import api
 from .wraps import WebApiResource
 from api.libs.decorator import unified_response
 from api.libs.response import make_response
+from ...data.models.enums import PaymentChannelStatus
+
+logger = logging.getLogger(__name__)
 
 
 class PlanApiResource(Resource):
 
     @unified_response(plan_fields)
     def get(self):
-        plans = db.session.query(Plan).all()
+        plans = SubscriptionPlanService.load_plans()
         return make_response(plans)
-
-
-class PlanPayResource(WebApiResource):
-
-    @unified_response(subscription_fields)
-    def post(self, user, plan_id):
-        subscription = SubscriptionService.create_subscription(user, plan_id)
-        return make_response(subscription)
 
 
 class SubscriptionsResource(WebApiResource):
 
-    @unified_response(list_subscription_fields)
+    @unified_response(subscription_fields)
     def get(self, user):
         subscriptions = SubscriptionService.list_subscriptions(user)
         return make_response(subscriptions)
+
+    @unified_response(subscription_url_fields)
+    def post(self, user):
+        # 构建订阅
+        parser = reqparse.RequestParser()
+        parser.add_argument("plan", type=str, location="json")
+
+        args = parser.parse_args()
+        email = user.email
+        plan = args.plan
+
+        app_web_url = current_app.config["APP_WEB_URL"]
+        flag, info = SubscriptionService.start_subscription(user, email, plan, app_web_url)
+        if not flag:
+            return make_response(status="fail", message=info)
+
+        return make_response({"sessionId": info.id, "checkoutUrl": info.url})
 
 
 class SubscriptionResource(WebApiResource):
@@ -49,6 +75,15 @@ class SubscriptionResource(WebApiResource):
     def get(self, user, subscription_id):
         subscription = SubscriptionService.load_subscription(subscription_id)
         return make_response(subscription)
+
+
+class SubscriptionCancelResource(WebApiResource):
+
+    @unified_response(subscription_fields)
+    def post(self, user, subscription_id):
+        subscription = SubscriptionService.cancel_subscription(user, subscription_id)
+        logger.info("subscription cancel data %s", subscription)
+        return subscription
 
 
 class SubscriptionPaymentResource(WebApiResource):
@@ -144,11 +179,12 @@ class OrderResource(WebApiResource):
 
 
 api.add_resource(PlanApiResource, "/plans")
-api.add_resource(PlanPayResource, "/plans/<plan_id>/pay")
 
 api.add_resource(SubscriptionsResource, "/subscriptions")
 api.add_resource(SubscriptionResource, "/subscriptions/<subscription_id>")
+# api.add_resource(SubscriptionCancelResource, "/subscriptions/<subscription_id>/cancel")
 api.add_resource(SubscriptionPaymentResource, "/subscriptions/<subscription_id>/pay")
+api.add_resource(SubscriptionCancelResource, "/subscriptions/<subscription_id>/cancel")
 
 api.add_resource(OrdersResource, "/orders")
 api.add_resource(OrderResource, "/orders/<order_id>")

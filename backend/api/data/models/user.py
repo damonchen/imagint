@@ -29,6 +29,10 @@ class User(db.Model):
     password = db.Column(db.String(255), nullable=True)  # 邮箱登录的密码
     role = db.Column(db.String(26), nullable=False, default="user")  # "user" or "admin"
 
+    subscription_status = db.Column(
+        db.String(26), nullable=False, default="inactive"
+    )  # 是否订阅状态
+
     invited_by = db.Column(db.Integer, nullable=True)
     timezone = db.Column(db.String(255), nullable=False, default="Asia/Shanghai")
 

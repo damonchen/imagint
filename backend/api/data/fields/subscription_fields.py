@@ -17,18 +17,15 @@ plan_fields = {
     "updatedAt": TimestampField(attribute="updated_at"),
 }
 
-subscription_fields = {
+subscription_url_fields = {
+    "sessionId": fields.String(),
+    "checkoutUrl": fields.String(),
+}
+
+cancel_subscription_fields = {
     "id": fields.String(attribute="id"),
-    "userId": fields.String(attribute="user_id"),
-    "planId": fields.String(attribute="plan_id"),
-    "startedAt": fields.String(attribute="started_at"),
-    "endedAt": fields.String(attribute="ended_at"),
     "status": fields.String(attribute="status"),
-    "autoRenew": fields.String(attribute="auto_renew"),
-    "createdBy": fields.Integer(attribute="created_by"),
-    "createdAt": TimestampField(attribute="created_at"),
-    "updatedBy": fields.Integer(attribute="updated_by"),
-    "updatedAt": TimestampField(attribute="updated_at"),
+    "canceledAt": fields.String(attribute="canceled_at"),
 }
 
 order_fields = {
@@ -45,3 +42,19 @@ order_fields = {
     "updatedBy": fields.Integer(attribute="updated_by"),
     "updatedAt": TimestampField(attribute="updated_at"),
 }
+
+subscription_fields = {
+    "id": fields.String(attribute="id"),
+    "userId": fields.String(attribute="user_id"),
+    "planId": fields.String(attribute="plan_id"),
+    "startedAt": fields.String(attribute="started_at"),
+    "endedAt": fields.String(attribute="ended_at"),
+    "status": fields.String(attribute="status"),
+    "autoRenew": fields.String(attribute="auto_renew"),
+    "createdBy": fields.String(attribute="created_by"),
+    "createdAt": TimestampField(attribute="created_at"),
+    "updatedBy": fields.String(attribute="updated_by"),
+    "updatedAt": TimestampField(attribute="updated_at"),
+}
+
+list_subscription_fields = fields.List(fields.Nested(subscription_fields))

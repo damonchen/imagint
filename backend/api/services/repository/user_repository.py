@@ -176,6 +176,28 @@ class UserRepository(object):
         return user
 
 
+class UserCreditsRepository(object):
+
+    @staticmethod
+    def get_user_credits(user):
+        return (
+            db.session.query(UserCredits).filter(UserCredits.user_id == user.id).first()
+        )
+
+    @staticmethod
+    def add_user_credits(user, amount):
+        user_credits = UserCreditsRepository.get_user_credit(user)
+        if not user_credits:
+            user_credits = UserCredits(user_id=user.id, balance=0)
+            db.session.add(user_credits)
+
+        user_credits.balance += amount
+        db.session.add(user_credits)
+        db.session.flush()
+
+        return user_credits
+
+
 class UserPasswordTokenRepository(object):
     @staticmethod
     def create_token(user, type, expires_at):

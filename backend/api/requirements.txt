@@ -26,3 +26,5 @@ python-dateutil
 # python-magic
 Flask-Limiter[redis]
 pika
+stripe
+cryptography

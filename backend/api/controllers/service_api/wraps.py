@@ -64,7 +64,7 @@ def decode_jwt_token():
 
     user = db.session.query(User).filter(User.id == user_id).first()
     if user is None:
-        raise NotFound()
+        raise Unauthorized("Invalid user")
 
     g.user = user
     return user

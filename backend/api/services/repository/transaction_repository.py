@@ -134,6 +134,8 @@ class TransactionRepository(object):
             payment_channel=payment_channel,
             reference_id=reference_id,
             description=description,
+            created_by=user.id,
+            updated_by=user.id,
         )
 
         db.session.add(transaction)
@@ -148,7 +150,11 @@ class TransactionRepository(object):
             .filter(Transaction.user_id == user.id)
             .get(transaction_id)
         )
+        if transaction is None:
+            return None
+
         transaction.status = status
+        transaction.updated_by = user.id
 
         db.session.add(transaction)
         db.session.flush()

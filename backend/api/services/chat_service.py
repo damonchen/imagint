@@ -10,7 +10,7 @@ from typing import List
 from .repository.task_repository import TaskRepository
 from .task_service import TaskService
 from .redis_service import RedisService
-from .credit_service import CreditService
+from .credit_service import UserCreditService
 from api.extensions.database import transaction
 from .repository.attachment_repository import AttachmentRepository
 from .repository.chat_repository import (
@@ -73,13 +73,13 @@ class ChatMessageService(object):
         count: int,
     ) -> ChatMessage:
         # 检查用户是否有足够的credit生成图片
-        if not CreditService.check_user_can_generate_image(user, count):
+        if not UserCreditService.check_user_can_generate_image(user, count):
             raise ValueError(
                 f"Insufficient credits. You need {count * 4} credits to generate {count} images."
             )
 
         # 消费credit
-        if not CreditService.consume_credits_for_image_generation(user, count):
+        if not UserCreditService.consume_credits_for_image_generation(user, count):
             raise ValueError("Failed to consume credits. Please try again.")
 
         message = ChatMessageRepository.create_message(

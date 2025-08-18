@@ -6,3 +6,4 @@ bp = Blueprint("web", __name__, url_prefix="/v1")
 api = ExternalApi(bp)
 
 from . import file
+from . import stripe

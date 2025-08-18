@@ -1,0 +1,73 @@
+{
+    "id": "evt_3RwxktP089RcvSY11KCWoCSo",
+    "object": "event",
+    "api_version": "2024-04-10",
+    "created": 1755403179,
+    "data": {
+        "object": {
+            "id": "pi_3RwxktP089RcvSY115WLYd54",
+            "object": "payment_intent",
+            "amount": 1000,
+            "amount_capturable": 0,
+            "amount_details": {
+                "tip": {}
+            },
+            "amount_received": 0,
+            "application": null,
+            "application_fee_amount": null,
+            "automatic_payment_methods": null,
+            "canceled_at": null,
+            "cancellation_reason": null,
+            "capture_method": "automatic",
+            "client_secret": "pi_3RwxktP089RcvSY115WLYd54_secret_rYm9nFiQJ2r0A9Vk4uyQOpMCi",
+            "confirmation_method": "automatic",
+            "created": 1755403179,
+            "currency": "usd",
+            "customer": "cus_SsiMY6i0fEjB4v",
+            "description": "Subscription creation",
+            "excluded_payment_method_types": null,
+            "invoice": null,
+            "last_payment_error": null,
+            "latest_charge": null,
+            "livemode": false,
+            "metadata": {},
+            "next_action": null,
+            "on_behalf_of": null,
+            "payment_method": null,
+            "payment_method_configuration_details": null,
+            "payment_method_options": {
+                "card": {
+                    "installments": null,
+                    "mandate_options": null,
+                    "network": null,
+                    "request_three_d_secure": "automatic"
+                },
+                "link": {
+                    "persistent_token": null
+                }
+            },
+            "payment_method_types": [
+                "card",
+                "link"
+            ],
+            "processing": null,
+            "receipt_email": null,
+            "review": null,
+            "setup_future_usage": "off_session",
+            "shipping": null,
+            "source": null,
+            "statement_descriptor": null,
+            "statement_descriptor_suffix": null,
+            "status": "requires_payment_method",
+            "transfer_data": null,
+            "transfer_group": null
+        }
+    },
+    "livemode": false,
+    "pending_webhooks": 2,
+    "request": {
+        "id": null,
+        "idempotency_key": "7af785d8-85c5-411c-ac8f-d2489cefe984"
+    },
+    "type": "payment_intent.created"
+}

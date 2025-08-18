@@ -1,0 +1,33 @@
+<html>
+  <head> </head>
+
+  <body>
+    <h1>支付成功！</h1>
+    <p>客户邮箱: {{customer_email}}</p>
+    <p>订阅ID: {{subscription_id}}</p>
+    <p>支付状态: {{payment_status}}</p>
+
+    <div style="margin-top: 20px">
+      <p>
+        <span id="countdown">5</span>秒后自动跳转到
+        <a href="/">首页</a>
+      </p>
+    </div>
+
+    <script type="text/javascript">
+      const timeout = document.getElementById('countdown');
+      let count = 5;
+      const countDown = setInterval(() => {
+        count--;
+        timeout.textContent = count;
+        if (count <= 0) {
+          clearInterval(countDown);
+        }
+      }, 1000);
+
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 5000);
+    </script>
+  </body>
+</html>
