@@ -20,6 +20,7 @@ user_fields = {
 
 user_partial_fields = {
     "id": fields.Integer,
+    "theme": fields.String(),
     "email": fields.String(),
     "username": fields.String,
     "avatar": fields.String(),

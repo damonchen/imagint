@@ -20,8 +20,11 @@ const SelfUserProvider = ({ children }) => {
   const value = useMemo(() => {
     return {
       user: data?.data ?? {},
+      refresh: () => {
+        queryClient.invalidateQueries({ queryKey: ['selfUser'] })
+      },
     }
-  }, [data])
+  }, [data, queryClient])
 
   return (
     <SelfUserContext.Provider value={value}>

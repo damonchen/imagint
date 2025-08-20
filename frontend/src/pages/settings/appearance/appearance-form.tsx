@@ -16,15 +16,20 @@ import {
 } from '@/components/ui/form'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { toast } from '@/components/ui/use-toast'
+import { updateAppearance } from '@/api/user'
+import { useMutation } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+import { useTheme } from '@/components/theme-provider'
+
 
 const appearanceFormSchema = z.object({
-  theme: z.enum(['light', 'dark'], {
+  theme: z.enum(['light', 'dark', 'system'], {
     required_error: 'Please select a theme.',
   }),
-  font: z.enum(['inter', 'manrope', 'system'], {
-    invalid_type_error: 'Select a font',
-    required_error: 'Please select a font.',
-  }),
+  // font: z.enum(['inter', 'manrope', 'system'], {
+  //   invalid_type_error: 'Select a font',
+  //   required_error: 'Please select a font.',
+  // }),
 })
 
 type AppearanceFormValues = z.infer<typeof appearanceFormSchema>
@@ -35,12 +40,51 @@ const defaultValues: Partial<AppearanceFormValues> = {
 }
 
 export function AppearanceForm() {
-  const form = useForm<AppearanceFormValues>({
-    resolver: zodResolver(appearanceFormSchema),
-    defaultValues,
+  const [isLoading, setIsLoading] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const appearanceMutation = useMutation({
+    mutationFn: updateAppearance,
+    mutationKey: ['updateAppearance'],
+    onSettled: () => {
+      setIsLoading(false);
+    }
   })
 
+
+  const form = useForm<AppearanceFormValues>({
+    resolver: zodResolver(appearanceFormSchema),
+    defaultValues: {
+      theme: theme,
+    },
+  })
+
+  useEffect(() => {
+    form.reset({
+      theme: theme,
+    })
+  }, [theme, form])
+
   function onSubmit(data: AppearanceFormValues) {
+    setIsLoading(true);
+
+    appearanceMutation.mutate(data, {
+      onSuccess: (resp) => {
+        if (resp.status === 'ok') {
+          toast({
+            title: 'Appearance updated successfully',
+          })
+        } else {
+          toast({
+            title: 'Appearance update failed',
+            description: resp.message,
+          })
+        }
+
+        // 修改系统的theme
+        setTheme(resp.data.theme);
+      }
+    });
+
     toast({
       title: 'You submitted the following values:',
       description: (
@@ -54,7 +98,7 @@ export function AppearanceForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-        <FormField
+        {/* <FormField
           control={form.control}
           name='font'
           render={({ field }) => (
@@ -82,7 +126,7 @@ export function AppearanceForm() {
               <FormMessage />
             </FormItem>
           )}
-        />
+        /> */}
         <FormField
           control={form.control}
           name='theme'
@@ -155,7 +199,7 @@ export function AppearanceForm() {
           )}
         />
 
-        <Button type='submit'>Update preferences</Button>
+        <Button type='submit' disabled={isLoading}>Update preferences</Button>
       </form>
     </Form>
   )

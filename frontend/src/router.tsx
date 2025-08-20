@@ -52,11 +52,23 @@ const router = createHashRouter([
         }),
       },
       {
-        path: 'chats',
+        path: 'subscription',
         lazy: async () => ({
-          Component: (await import('./pages/chat')).default,
+          Component: (await import('./pages/subscription/index')).default,
         }),
       },
+      {
+        path: 'subscription/price',
+        lazy: async () => ({
+          Component: (await import('./pages/subscription/price')).default,
+        }),
+      },
+      // {
+      //   path: 'chats',
+      //   lazy: async () => ({
+      //     Component: (await import('./pages/chat')).default,
+      //   }),
+      // },
       {
         path: 'settings',
         lazy: async () => ({
@@ -74,6 +86,12 @@ const router = createHashRouter([
             path: 'user',
             lazy: async () => ({
               Component: (await import('./pages/settings/user')).default,
+            }),
+          },
+          {
+            path: 'change-password',
+            lazy: async () => ({
+              Component: (await import('./pages/settings/change-password')).default,
             }),
           },
           {

@@ -35,6 +35,7 @@ class User(db.Model):
 
     invited_by = db.Column(db.Integer, nullable=True)
     timezone = db.Column(db.String(255), nullable=False, default="Asia/Shanghai")
+    theme = db.Column(db.String(255), nullable=False, default="light")
 
     created_at = db.Column(TimeStamp, nullable=False, server_default=func.now())
     updated_at = db.Column(
