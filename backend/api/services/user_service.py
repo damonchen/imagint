@@ -210,7 +210,9 @@ class UserService(object):
 
     @staticmethod
     @transaction
-    def change_password(user_id: int | User, username: str, new_password: str) -> User:
+    def change_password(
+        user_id: int | User, username: str, new_password: str, old_password: str = None
+    ) -> User:
         """
         Change user password
 
@@ -233,11 +235,26 @@ class UserService(object):
         # if not user.check_password(current_password):
         #     raise ValidationError("Current password is incorrect")
 
+        if old_password:
+            if not user.check_password(old_password):
+                raise ValidationError("Current password is incorrect")
+
         user = UserRepository.update_user(
             user, username=username, password=new_password
         )
 
-        db.session.commit()
+        return user
+
+    @staticmethod
+    @transaction
+    def update_profile(user: User, username: str) -> User:
+        user = UserRepository.update_user(user, username=username)
+
+        return user
+
+    @staticmethod
+    def update_appearance(user: User, theme: str) -> User:
+        user = UserRepository.update_user(user, theme=theme)
         return user
 
 

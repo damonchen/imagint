@@ -42,12 +42,12 @@ export const sidelinks: SideLink[] = [
     href: '/',
     icon: <IconLayoutDashboard size={18} />,
   },
-  {
-    title: 'Chats',
-    label: '',
-    href: '/chats',
-    icon: <IconMessages size={18} />,
-  },
+  // {
+  //   title: 'Chats',
+  //   label: '',
+  //   href: '/chats',
+  //   icon: <IconMessages size={18} />,
+  // },
   // {
   //   title: 'Ticket',
   //   label: '',
@@ -168,10 +168,10 @@ export const sidelinks: SideLink[] = [
   //     },
   //   ],
   // },
-  {
-    title: 'Settings',
-    label: '',
-    href: '/settings',
-    icon: <IconSettings size={18} />,
-  },
+  // {
+  //   title: 'Settings',
+  //   label: '',
+  //   href: '/settings',
+  //   icon: <IconSettings size={18} />,
+  // },
 ]

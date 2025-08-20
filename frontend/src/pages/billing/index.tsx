@@ -130,6 +130,11 @@ export default function Billing() {
         }
     }, [creditInfo, setCredit])
 
+
+    useEffect(() => {
+        queryClient.invalidateQueries({ queryKey: ['userCreditTransactions'] })
+    }, [currentPage, pageSize, queryClient])
+
     const activeSubscription = useMemo(() => {
         const subscriptions = subscriptionsData?.data || [];
 
@@ -162,7 +167,7 @@ export default function Billing() {
     // 处理升级计划
     const handleUpgrade = async (planType: string) => {
         try {
-            const response = await createSubscription(planType)
+            const response = await createSubscription({ plan: planType })
             if (response.status === "fail") {
                 toast({
                     title: "Error",
@@ -250,20 +255,32 @@ export default function Billing() {
     }
 
     // 分页处理
-    const totalPages = transactionsData?.data?.totalPages || 1
-    const totalItems = transactionsData?.data?.total || 0
+    const totalPages = useMemo(() => {
+        const total = transactionsData?.data?.total || 0
+        const pages = total === 0 ? 1 : Math.ceil(total / pageSize)
+        return pages
+    }, [transactionsData, pageSize])
 
-    const handlePageChange = (page) => {
+
+    const totalItems = useMemo(() => {
+        return transactionsData?.data?.total || 0
+    }, [transactionsData])
+
+    const transactionItems = useMemo(() => {
+        return transactionsData?.data?.transactions || []
+    }, [transactionsData]);
+
+    const handlePageChange = (page: number) => {
         setCurrentPage(page)
     }
 
-    const handlePageSizeChange = (size) => {
+    const handlePageSizeChange = (size: number) => {
         setPageSize(size)
         setCurrentPage(1)
     }
 
     // 截断提示词
-    const truncatePrompt = (prompt, maxLength = 20) => {
+    const truncatePrompt = (prompt: string, maxLength = 20) => {
         if (!prompt || prompt.length <= maxLength) return prompt
         return prompt.substring(0, maxLength) + '...'
     }
@@ -362,11 +379,11 @@ export default function Billing() {
                                                     Loading...
                                                 </TableCell>
                                             </TableRow>
-                                        ) : transactionsData?.items?.length > 0 ? (
-                                            transactionsData.items.map((transaction) => (
+                                        ) : transactionItems?.length > 0 ? (
+                                            transactionItems.map((transaction) => (
                                                 <TableRow key={transaction.id}>
                                                     <TableCell className="font-medium">
-                                                        {new Date(transaction.createdAt).toLocaleDateString()}
+                                                        {new Date(parseInt(transaction.createdAt)).toLocaleDateString()}
                                                     </TableCell>
                                                     <TableCell>
                                                         <TooltipProvider>

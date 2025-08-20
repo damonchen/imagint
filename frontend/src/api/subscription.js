@@ -42,7 +42,7 @@ export async function startTransaction(id) {
 
 // 新增的API函数
 export async function createSubscription(plan) {
-  return authApi.post('/subscriptions', { plan })
+  return authApi.post('/subscriptions', { ...plan })
 }
 
 export async function cancelSubscription(subscriptionId) {
@@ -51,4 +51,8 @@ export async function cancelSubscription(subscriptionId) {
 
 export async function getStripeCheckoutUrl(planId) {
   return authApi.post('/stripe/checkout', { planId })
+}
+
+export async function getPlan(planName) {
+  return authApi.get(`/plan/${planName}`)
 }

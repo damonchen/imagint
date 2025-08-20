@@ -57,29 +57,34 @@ const sidebarNavItems = [
     icon: <IconUser size={18} />,
     href: '/settings',
   },
+  // {
+  //   title: 'User',
+  //   icon: <IconTool size={18} />,
+  //   href: '/settings/user',
+  // },
   {
-    title: 'User',
-    icon: <IconTool size={18} />,
-    href: '/settings/user',
+    title: 'ChangePassword',
+    icon: <IconUser size={18} />,
+    href: '/settings/change-password',
   },
   {
     title: 'Appearance',
     icon: <IconPalette size={18} />,
     href: '/settings/appearance',
   },
-  {
-    title: 'Notifications',
-    icon: <IconNotification size={18} />,
-    href: '/settings/notifications',
-  },
-  {
-    title: 'Display',
-    icon: <IconBrowserCheck size={18} />,
-    href: '/settings/display',
-  },
-  {
-    title: 'Error Example',
-    icon: <IconExclamationCircle size={18} />,
-    href: '/settings/error-example',
-  },
+  // {
+  //   title: 'Notifications',
+  //   icon: <IconNotification size={18} />,
+  //   href: '/settings/notifications',
+  // },
+  // {
+  //   title: 'Display',
+  //   icon: <IconBrowserCheck size={18} />,
+  //   href: '/settings/display',
+  // },
+  // {
+  //   title: 'Error Example',
+  //   icon: <IconExclamationCircle size={18} />,
+  //   href: '/settings/error-example',
+  // },
 ]

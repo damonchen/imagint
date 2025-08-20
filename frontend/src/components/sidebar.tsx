@@ -155,6 +155,21 @@ export default function Sidebar2({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="start" side="right">
+                {
+                  // free user, upgrade to pro
+                  user?.is_pro ? (
+                    <DropdownMenuItem onClick={() => navigate('/settings')}>
+                      <IconSettings className="mr-2 h-4 w-4" />
+                      <span>Setting</span>
+                    </DropdownMenuItem>
+                  ) : (
+                    <DropdownMenuItem onClick={() => navigate('/subscription/price')}>
+                      <IconSettings className="mr-2 h-4 w-4" />
+                      <span>Upgrade to Pro</span>
+                    </DropdownMenuItem>
+                  )
+                }
+
                 <DropdownMenuItem onClick={() => navigate('/settings')}>
                   <IconSettings className="mr-2 h-4 w-4" />
                   <span>Setting</span>

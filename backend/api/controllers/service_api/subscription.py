@@ -44,6 +44,13 @@ class PlanApiResource(Resource):
         return make_response(plans)
 
 
+class PlanNameResource(Resource):
+    @unified_response(plan_fields)
+    def get(self, plan_name):
+        plan = SubscriptionPlanService.load_plan_by_name(plan_name)
+        return make_response(plan)
+
+
 class SubscriptionsResource(WebApiResource):
 
     @unified_response(subscription_fields)
@@ -62,7 +69,9 @@ class SubscriptionsResource(WebApiResource):
         plan = args.plan
 
         app_web_url = current_app.config["APP_WEB_URL"]
-        flag, info = SubscriptionService.start_subscription(user, email, plan, app_web_url)
+        flag, info = SubscriptionService.start_subscription(
+            user, email, plan, app_web_url
+        )
         if not flag:
             return make_response(status="fail", message=info)
 
@@ -179,6 +188,8 @@ class OrderResource(WebApiResource):
 
 
 api.add_resource(PlanApiResource, "/plans")
+
+api.add_resource(PlanNameResource, "/plan/<plan_name>")
 
 api.add_resource(SubscriptionsResource, "/subscriptions")
 api.add_resource(SubscriptionResource, "/subscriptions/<subscription_id>")

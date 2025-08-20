@@ -43,3 +43,15 @@ export async function getAddress(id) {
 export async function getSelf() {
   return authApi.get('/self')
 }
+
+export async function changePassword(data) {
+  return authApi.post('/self/change-password', data)
+}
+
+export async function updateProfile(data) {
+  return authApi.post('/self/update-profile', data)
+}
+
+export async function updateAppearance(data) {
+  return authApi.post('/self/appearance', data)
+}
