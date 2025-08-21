@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { IconChevronsLeft, IconLogout, IconMenu2, IconReceipt, IconSettings, IconX } from '@tabler/icons-react'
+import { IconChevronsLeft, IconLogout, IconMenu2, IconReceipt, IconStar, IconSettings, IconX } from '@tabler/icons-react'
 import { Layout, LayoutHeader } from './custom/layout'
 import { Button } from './custom/button'
 import Nav from './nav'
@@ -52,6 +52,15 @@ export default function Sidebar2({
       document.body.classList.remove('overflow-hidden')
     }
   }, [navOpened])
+
+
+  const handleUpgrade = () => {
+    if (user?.subscriptionPlan === 'free') {
+      navigate('/subscription/pro')
+    } else {
+      navigate('/subscription/ultra')
+    }
+  }
 
   return (
     <aside
@@ -157,15 +166,12 @@ export default function Sidebar2({
               <DropdownMenuContent className="w-56" align="start" side="right">
                 {
                   // free user, upgrade to pro
-                  user?.is_pro ? (
-                    <DropdownMenuItem onClick={() => navigate('/settings')}>
-                      <IconSettings className="mr-2 h-4 w-4" />
-                      <span>Setting</span>
-                    </DropdownMenuItem>
+                  user?.subscriptionPlan === 'ultra' ? (
+                    <></>
                   ) : (
-                    <DropdownMenuItem onClick={() => navigate('/subscription/price')}>
-                      <IconSettings className="mr-2 h-4 w-4" />
-                      <span>Upgrade to Pro</span>
+                    <DropdownMenuItem onClick={handleUpgrade}>
+                      <IconStar className="mr-2 h-4 w-4" />
+                      <span>Upgrade to {user?.subscriptionPlan === 'free' ? 'Pro' : 'Ultra'}</span>
                     </DropdownMenuItem>
                   )
                 }

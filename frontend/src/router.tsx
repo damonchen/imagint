@@ -52,7 +52,7 @@ const router = createHashRouter([
         }),
       },
       {
-        path: 'subscription',
+        path: 'subscription/:plan_name',
         lazy: async () => ({
           Component: (await import('./pages/subscription/index')).default,
         }),

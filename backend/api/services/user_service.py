@@ -257,6 +257,11 @@ class UserService(object):
         user = UserRepository.update_user(user, theme=theme)
         return user
 
+    @staticmethod
+    def update_user_subscription_plan(user: User, plan: str) -> User:
+        user = UserRepository.update_user(user, subscription_plan=plan)
+        return user
+
 
 class AccountService(object):
 
