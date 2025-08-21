@@ -25,6 +25,7 @@ user_partial_fields = {
     "username": fields.String,
     "avatar": fields.String(),
     "status": fields.String,
+    "subscriptionPlan": fields.String(attribute="subscription_plan"),
 }
 
 user_pagination_fields = {

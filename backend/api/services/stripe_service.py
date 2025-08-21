@@ -14,7 +14,7 @@ from api.services.subscription_service import (
 def get_customer_subscription(customer_id):
     value = RedisService.get(f"stripe:customer:{customer_id}")
     value = json.loads(value)
-    return value['subscription_id']
+    return value["subscription_id"]
 
 
 class StripeService(object):
@@ -26,7 +26,7 @@ class StripeService(object):
         print(f"New subscription created: {subscription.id}, {payload}")
         stripe_subscription_id = subscription["id"]
 
-        customer_id = subscription['customer']
+        customer_id = subscription["customer"]
         subscription_id = get_customer_subscription(customer_id=customer_id)
 
         # user_id = value['user_id']
@@ -43,7 +43,13 @@ class StripeService(object):
         )
 
         subscription_stripe_id_updated.send(
-            json.dumps({'id': subscription_id, 'stripe_subscription_id': stripe_subscription_id, }))
+            json.dumps(
+                {
+                    "id": subscription_id,
+                    "stripe_subscription_id": stripe_subscription_id,
+                }
+            )
+        )
 
     @staticmethod
     @transaction
@@ -64,7 +70,7 @@ class StripeService(object):
     @staticmethod
     @transaction
     def handle_payment_succeeded(invoice, payload):
-        customer_id = invoice['customer']
+        customer_id = invoice["customer"]
         subscription_id = get_customer_subscription(customer_id=customer_id)
         subscription = SubscriptionService.load_subscription(subscription_id)
 
@@ -108,6 +114,6 @@ class StripeService(object):
             return
 
         # Update user subscription status to inactive
-        UserService.update_user_subscription_status(user, "inactive")
+        UserService.update_user_subscription_plan(user, "free")
 
     pass

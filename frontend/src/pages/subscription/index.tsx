@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -9,7 +9,9 @@ import { useSelf } from '@/provider/self-user-provider'
 
 export default function SubscriptionPage() {
     /// 从请求中获取plan名称
-    const { plan } = useParams()
+    const { plan_name: planName } = useParams()
+
+    console.log('usr params plan is', planName, useParams())
 
     const [isLoading, setIsLoading] = useState(false)
     const { user } = useSelf()
@@ -18,9 +20,9 @@ export default function SubscriptionPage() {
 
     // 此处有待优化，不同的订阅类型使用不同的数据类型
 
-    const [data, setData] = useState({
-        plan: 'pro',
-        billing_period: 'monthly',
+    const [planData, setPlanData] = useState({
+        name: 'pro',
+        interval: 'monthly',
         price: 29.99,
         currency: 'USD',
         user_id: user?.id,
@@ -35,14 +37,19 @@ export default function SubscriptionPage() {
     })
 
     useEffect(() => {
-        if (plan) {
-            getPlan(plan).then((resp) => {
+        if (planName) {
+            getPlan(planName).then((resp) => {
                 if (resp.status === 'ok') {
-                    setData(resp.data)
+                    setPlanData(resp.data)
                 }
             })
         }
-    }, [plan])
+    }, [planName])
+
+
+    const price = useMemo(() => {
+        return planData.price;
+    }, [planData])
 
     const handleSubscribe = () => {
         setIsLoading(true)
@@ -83,15 +90,16 @@ export default function SubscriptionPage() {
                 <div className="w-2/3">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Premium Subscription</CardTitle>
+                            <CardTitle>{planData.name == 'pro' ? "Pro" : "Ultra"} Subscription</CardTitle>
                             <CardDescription>
-                                Get access to all premium features and benefits
+                                Get access to all {planData.name == 'pro' ? "Pro" : "Ultra"} features and benefits
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
                                 <h3 className="text-lg font-semibold">Features included:</h3>
                                 <ul className="list-disc list-inside space-y-1">
+                                    {planData.description}
                                     <li>Unlimited access to all content</li>
                                     <li>Priority customer support</li>
                                     <li>Advanced analytics and reporting</li>
@@ -120,20 +128,20 @@ export default function SubscriptionPage() {
                         <CardContent className="space-y-4">
                             <div className="flex justify-between">
                                 <span>Plan</span>
-                                <span className="font-semibold">Premium</span>
+                                <span className="font-semibold">{planData.name == 'pro' ? "Pro" : "Ultra"}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span>Billing Period</span>
-                                <span className="font-semibold">Monthly</span>
+                                <span className="font-semibold">{planData.interval == 'monthly' ? "Monthly" : "Yearly"}</span>
                             </div>
                             <div className="flex justify-between">
                                 <span>Price</span>
-                                <span className="font-semibold">$29.99/month</span>
+                                <span className="font-semibold">${price}/{planData.interval == 'monthly' ? "Month" : "Year"}</span>
                             </div>
                             <div className="border-t pt-4">
                                 <div className="flex justify-between text-lg font-bold">
                                     <span>Total</span>
-                                    <span>$29.99</span>
+                                    <span>${price}</span>
                                 </div>
                             </div>
                         </CardContent>
